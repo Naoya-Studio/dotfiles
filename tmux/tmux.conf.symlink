@@ -1,0 +1,81 @@
+# Set default shell to zsh
+set-option -g default-shell /bin/zsh
+
+# Enable 256 color support
+set-option -g default-terminal screen-256color
+set -g terminal-overrides 'xterm:colors=256'
+
+# Change prefix key to C-q
+set -g prefix C-q
+
+# Unbind default prefix C-b
+unbind C-b
+
+# Position status bar at top
+set-option -g status-position top
+
+# Set status bar length
+set-option -g status-left-length 90
+set-option -g status-right-length 90
+
+# Left status: hostname and pane number
+set-option -g status-left '#H:[#P]'
+
+# Right status: Wi-Fi, battery, date/time
+set-option -g status-right '#(wifi) #(battery --tmux) [%Y-%m-%d(%a) %H:%M]'
+
+# Refresh status bar every second
+set-option -g status-interval 1
+
+# Center window list
+set-option -g status-justify centre
+
+# Status bar background color
+set-option -g status-bg "colour238"
+
+# Status bar foreground color
+set-option -g status-fg "colour255"
+
+# Vim-style pane navigation
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+
+# Vim-style pane resizing
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+
+# Split panes with | and -
+bind | split-window -h
+bind - split-window -v
+
+# Start window numbering at 1
+set-option -g base-index 1
+
+# Enable mouse support
+set-option -g mouse on
+bind -n WheelUpPane if-shell -F -t = "#{mouse_any_flag}" "send-keys -M" "if -Ft= '#{pane_in_mode}' 'send-keys -M' 'copy-mode -e'"
+
+# Copy mode settings (vim keybindings)
+setw -g mode-keys vi
+
+# 'v' to start selection
+bind -T copy-mode-vi v send -X begin-selection
+
+# 'V' for line selection
+bind -T copy-mode-vi V send -X select-line
+
+# 'C-v' for rectangle selection
+bind -T copy-mode-vi C-v send -X rectangle-toggle
+
+# 'y' to yank
+bind -T copy-mode-vi y send -X copy-selection
+
+# 'Y' to yank line
+bind -T copy-mode-vi Y send -X copy-line
+
+# 'C-p' to paste
+bind-key C-p paste-buffer

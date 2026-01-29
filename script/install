@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Run all dotfiles installers.
+
+cd "$(dirname $0)"/..
+
+echo "› brew bundle"
+brew bundle || echo "Some packages failed to install, continuing..."
+
+# Find the installers and run them iteratively
+find . -name install.sh | while read installer ; do sh -c "${installer}" ; done
+
+# Enable Homebrew autoupdate after bundle
+if [ "$(uname -s)" == "Darwin" ]; then
+    echo "› homebrew/autoupdate.sh"
+    ./homebrew/autoupdate.sh || true
+fi
+
+# Run macOS settings (Touch ID setup needs pam-reattach from brew bundle)
+if [ "$(uname -s)" == "Darwin" ]; then
+    echo "› macos/set-defaults.sh"
+    ./macos/set-defaults.sh
+fi

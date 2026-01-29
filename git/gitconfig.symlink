@@ -1,0 +1,4 @@
+# User config is set via git/install.sh on first run
+[user]
+	name = Naoya Uchida
+	email = naoya.studio@gmail.com

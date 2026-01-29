@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# One-liner setup script for new machines
+# Usage: curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup -o /tmp/setup.sh && bash /tmp/setup.sh
+#
+
+set -e
+
+DOTFILES_REPO="https://github.com/Naoya-Studio/dotfiles.git"
+DOTFILES_DIR="$HOME/dotfiles"
+
+echo ""
+echo "=== Dotfiles Setup ==="
+echo ""
+
+# Install Xcode Command Line Tools if needed
+if ! xcode-select -p &>/dev/null; then
+    echo "Installing Xcode Command Line Tools..."
+    xcode-select --install
+    echo "Waiting for Xcode Command Line Tools installation..."
+    until xcode-select -p &>/dev/null; do
+        sleep 5
+    done
+    echo "Xcode Command Line Tools installed!"
+fi
+
+# Accept Xcode license
+if /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
+    echo "Accepting Xcode license..."
+    sudo xcodebuild -license accept
+fi
+
+# Install Homebrew if needed
+if ! command -v brew &>/dev/null; then
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    # Set up PATH for this session
+    if [[ $(uname -m) == "arm64" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    else
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+fi
+
+# Install git and gh via Homebrew (in case system git is outdated)
+echo "Installing gh..."
+brew install gh
+
+# Authenticate with GitHub if needed
+if ! gh auth status &>/dev/null; then
+    echo ""
+    echo "Please authenticate with GitHub:"
+    gh auth login
+fi
+
+# Check App Store sign in for mas (only if mas is installed)
+if command -v mas &>/dev/null; then
+    echo ""
+    echo "Checking App Store sign in..."
+    if ! mas account &>/dev/null; then
+        echo "Please sign in to the App Store to install mas apps."
+        echo "Press Enter after signing in..."
+        open -a "App Store"
+        read
+    fi
+fi
+
+# Clone dotfiles
+if [ -d "$DOTFILES_DIR" ]; then
+    echo "Dotfiles already exists at $DOTFILES_DIR"
+    echo "Pulling latest changes..."
+    git -C "$DOTFILES_DIR" pull
+else
+    echo "Cloning dotfiles..."
+    git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+fi
+
+# Run bootstrap
+echo ""
+echo "Running bootstrap..."
+cd "$DOTFILES_DIR"
+./script/bootstrap

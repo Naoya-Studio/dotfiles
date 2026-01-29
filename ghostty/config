@@ -1,0 +1,8 @@
+# Ghostty configuration
+# https://ghostty.org/docs/config
+
+theme = iTerm2 Dark Background
+
+font-family = "SF Mono"
+font-family = "Hiragino Kaku Gothic ProN"
+font-feature = -dlig
