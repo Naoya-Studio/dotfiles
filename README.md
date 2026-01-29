@@ -16,6 +16,22 @@ This will:
 5. Clone this repo
 6. Run bootstrap (install all apps, configure macOS, etc.)
 
+## Faster First Setup (Core only, includes Alfred)
+
+If you want a quicker “get productive first” setup (Alfred + shell + tmux + Touch ID for sudo):
+
+```sh
+cd ~/dotfiles
+./script/quickstart
+```
+
+Then later run the full install:
+
+```sh
+cd ~/dotfiles
+brew bundle
+```
+
 ## What Gets Installed
 
 - **Homebrew packages**: See `Brewfile`

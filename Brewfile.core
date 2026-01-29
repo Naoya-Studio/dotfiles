@@ -1,0 +1,12 @@
+tap "homebrew/autoupdate"
+
+# essentials
+brew "gh"
+brew "mas"
+brew "pam-reattach"
+brew "starship"
+brew "tmux"
+
+# essentials (apps)
+cask "alfred"
+
