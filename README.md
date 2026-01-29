@@ -129,7 +129,9 @@ cd ~/dotfiles
 ./script/pre-uninstall-homebrew
 ```
 
-If `sudo` is already broken, you must delete `sudo_local` from Recovery Mode.
+This rewrites `sudo_local` to remove Homebrew references and keeps password fallback working.
+
+If `sudo` is already broken, delete `sudo_local` from Recovery Mode (or rewrite it to only include `pam_tid.so`).
 
 ### Spotlight still responds to Cmd+Space
 Log out and back in, or:

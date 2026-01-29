@@ -6,10 +6,13 @@
 
 set -e
 
-echo "› Removing Touch ID sudo PAM config (sudo_local) if present..."
-if [ -f /etc/pam.d/sudo_local ]; then
-  sudo rm -f /etc/pam.d/sudo_local
-fi
+echo "› Making sudo_local safe (removing pam-reattach reference)..."
+# Keep sudo_local present, but remove any Homebrew-dependent module references.
+# Touch ID (pam_tid.so) does not depend on Homebrew and still allows password fallback.
+sudo tee /etc/pam.d/sudo_local > /dev/null <<'EOF'
+# sudo_local: local config file which survives system update
+auth       sufficient     pam_tid.so
+EOF
 
 echo "› Removing passwordless sudo for brew if present..."
 if [ -f /etc/sudoers.d/brew ]; then
