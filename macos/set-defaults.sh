@@ -68,19 +68,23 @@ else
         PAM_REATTACH="/usr/local/lib/pam/pam_reattach.so"
     fi
 
-    # Only configure if pam_reattach.so is installed (requires Homebrew)
+    echo "Configuring Touch ID for sudo..."
+    # Create sudo_local.
+    # - pam_tid.so provides Touch ID; on failure, sudo falls back to password.
+    # - pam_reattach.so is only included if installed (tmux compatibility).
     if [ -f "$PAM_REATTACH" ]; then
-        echo "Configuring Touch ID for sudo..."
-        # Create sudo_local with pam_reattach and pam_tid
         sudo tee /etc/pam.d/sudo_local > /dev/null <<EOF
 # sudo_local: local config file which survives system update
 auth       optional       $PAM_REATTACH
 auth       sufficient     pam_tid.so
 EOF
-        echo "Touch ID for sudo has been enabled"
     else
-        echo "Skipping Touch ID for sudo (pam-reattach not installed yet)"
+        sudo tee /etc/pam.d/sudo_local > /dev/null <<EOF
+# sudo_local: local config file which survives system update
+auth       sufficient     pam_tid.so
+EOF
     fi
+    echo "Touch ID for sudo has been enabled (password fallback available)"
 fi
 
 echo "Done. Note that some of these changes require a logout/restart to take effect."
