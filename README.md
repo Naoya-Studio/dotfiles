@@ -5,7 +5,7 @@ Personal dotfiles for macOS, inspired by [holman/dotfiles](https://github.com/ho
 ## New Mac Setup (One-liner)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup -o /tmp/setup.sh && bash /tmp/setup.sh
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full
 ```
 
 This will:
@@ -21,8 +21,7 @@ This will:
 If you want a quicker “get productive first” setup (Alfred + shell + tmux + Touch ID for sudo):
 
 ```sh
-cd ~/dotfiles
-./script/quickstart
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- core
 ```
 
 Then later run the full install:

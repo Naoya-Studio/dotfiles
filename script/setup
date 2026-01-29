@@ -1,13 +1,22 @@
 #!/bin/bash
 #
 # One-liner setup script for new machines
-# Usage: curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup -o /tmp/setup.sh && bash /tmp/setup.sh
+# Usage (full):
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full
+# Usage (core, includes Alfred + Touch ID):
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- core
 #
 
 set -e
 
 DOTFILES_REPO="https://github.com/Naoya-Studio/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
+
+MODE="${1:-full}"
+if [ "$MODE" != "full" ] && [ "$MODE" != "core" ]; then
+    echo "Usage: setup [full|core]"
+    exit 2
+fi
 
 echo ""
 echo "=== Dotfiles Setup ==="
@@ -76,8 +85,16 @@ else
     git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
 fi
 
-# Run bootstrap
+# Run install
 echo ""
-echo "Running bootstrap..."
+if [ "$MODE" = "core" ]; then
+    echo "Running quickstart (core)..."
+else
+    echo "Running bootstrap (full)..."
+fi
 cd "$DOTFILES_DIR"
-./script/bootstrap
+if [ "$MODE" = "core" ]; then
+    ./script/quickstart
+else
+    ./script/bootstrap
+fi
