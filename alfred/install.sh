@@ -17,6 +17,8 @@ if [ -d "/Applications/Alfred 5.app" ]; then
     /usr/libexec/PlistBuddy -c "Set :AppleSymbolicHotKeys:65:enabled false" ~/Library/Preferences/com.apple.symbolichotkeys.plist 2>/dev/null || \
     /usr/libexec/PlistBuddy -c "Add :AppleSymbolicHotKeys:65:enabled bool false" ~/Library/Preferences/com.apple.symbolichotkeys.plist
     # Apply settings immediately
+    killall cfprefsd 2>/dev/null || true
+    killall SystemUIServer 2>/dev/null || true
     /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
     
     if [ -d "$DOTFILES_PREFS" ]; then
