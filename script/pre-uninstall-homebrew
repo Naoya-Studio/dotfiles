@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#
+# Pre-uninstall cleanup for Homebrew.
+# This prevents sudo from breaking if Touch ID PAM config references Homebrew files.
+#
+
+set -e
+
+echo "› Removing Touch ID sudo PAM config (sudo_local) if present..."
+if [ -f /etc/pam.d/sudo_local ]; then
+  sudo rm -f /etc/pam.d/sudo_local
+fi
+
+echo "› Removing passwordless sudo for brew if present..."
+if [ -f /etc/sudoers.d/brew ]; then
+  sudo rm -f /etc/sudoers.d/brew
+fi
+
+echo "Done."
+

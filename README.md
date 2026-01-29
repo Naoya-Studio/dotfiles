@@ -119,6 +119,18 @@ Auto-updates every 24 hours. Passwordless sudo for brew.
 
 ## Troubleshooting
 
+### sudo: unable to initialize PAM
+If you uninstall Homebrew while Touch ID for sudo is enabled, `sudo` can break because `/etc/pam.d/sudo_local` may reference `pam_reattach.so` under Homebrew.
+
+**Before uninstalling Homebrew**, run:
+
+```sh
+cd ~/dotfiles
+./script/pre-uninstall-homebrew
+```
+
+If `sudo` is already broken, you must delete `sudo_local` from Recovery Mode.
+
 ### Spotlight still responds to Cmd+Space
 Log out and back in, or:
 ```sh
