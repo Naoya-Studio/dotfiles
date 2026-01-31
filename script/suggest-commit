@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Suggest a commit message from staged files: title = what changed, body = file list.
+
+set -e
+cd "$(git rev-parse --show-toplevel)"
+files="$(git diff --cached --name-only 2>/dev/null | sort -u)"
+
+if [ -z "$files" ]; then
+  echo "chore: no changes"
+  exit 0
+fi
+
+# Top-level paths for title (Brewfile, alfred, macos, zsh, ...)
+tops="$(echo "$files" | while IFS= read -r f; do echo "$f" | cut -d/ -f1; done | sort -u)"
+title_parts="$(echo "$tops" | paste -sd, - | sed 's/,/, /g')"
+
+# Title: what changed
+echo "chore: update $title_parts"
+echo ""
+# Body: list of changed files
+echo "Changed:"
+echo "$files" | while IFS= read -r f; do echo "- $f"; done
+exit 0

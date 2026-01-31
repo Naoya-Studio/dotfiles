@@ -35,7 +35,7 @@ while test $# -gt 0; do
       export DOTFILES="$dotfilesDirectory"
       (cd "$DOTFILES" && brew bundle dump --force)
       (cd "$DOTFILES" && git add -A && git diff --cached --quiet) && echo "Nothing to commit" || \
-        (cd "$DOTFILES" && git commit -m "chore: sync dotfiles state" && git push)
+        (cd "$DOTFILES" && git commit -m "$("$DOTFILES/script/suggest-commit")" && git push)
       exit
       ;;
     *)
