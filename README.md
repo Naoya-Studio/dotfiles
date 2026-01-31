@@ -56,6 +56,15 @@ brew bundle cleanup --force  # Remove apps not in Brewfile
 brew bundle dump --force     # Update Brewfile with current apps
 ```
 
+### Updating dotfiles (recording current state)
+When you change your machine (e.g. install an app via `brew install`), update the repo so the cloud has the latest:
+
+**All tracked changes** (easiest):
+   ```sh
+   dot --update
+   ```
+   This runs `brew bundle dump --force`, then stages all changes in the repo (Brewfile, alfred/, configs, etc.), commits and pushes. One command to sync your current state to the cloud.
+
 ### Individual Installers
 ```sh
 ./homebrew/install.sh  # Homebrew + autoupdate + passwordless sudo

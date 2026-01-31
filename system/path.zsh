@@ -1,5 +1,8 @@
 # System-wide PATH settings
 
+# Dotfiles bin (dot, etc.)
+export PATH="$HOME/dotfiles/bin:$PATH"
+
 # Local bin
 export PATH="$HOME/.local/bin:$PATH"
 

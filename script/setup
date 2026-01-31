@@ -33,6 +33,10 @@ if ! xcode-select -p &>/dev/null; then
     echo "Xcode Command Line Tools installed!"
 fi
 
+# Authenticate sudo once so license accept and Homebrew install don't each prompt
+echo "Authenticating sudo (once for this setup)..."
+sudo -v
+
 # Accept Xcode license
 if /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
     echo "Accepting Xcode license..."

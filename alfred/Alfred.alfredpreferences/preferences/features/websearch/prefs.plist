@@ -4,17 +4,6 @@
 <dict>
 	<key>customSites</key>
 	<dict>
-		<key>0910170E-6FD5-40F2-903F-579BAA246075</key>
-		<dict>
-			<key>enabled</key>
-			<true/>
-			<key>keyword</key>
-			<string>chatgpt||ai</string>
-			<key>text</key>
-			<string>Talk with ChatGPT</string>
-			<key>url</key>
-			<string>https://chatgpt.com/?q={query}</string>
-		</dict>
 		<key>0EC16143-1DCE-48F5-9BDE-4577D963ADB2</key>
 		<dict>
 			<key>enabled</key>
@@ -25,17 +14,6 @@
 			<string>Open at SoundCloud</string>
 			<key>url</key>
 			<string>https://soundcloud.com/</string>
-		</dict>
-		<key>A2CD6BE0-2195-44EF-91E2-7BA6E5BA116E</key>
-		<dict>
-			<key>enabled</key>
-			<true/>
-			<key>keyword</key>
-			<string>366</string>
-			<key>text</key>
-			<string>366日</string>
-			<key>url</key>
-			<string>https://www.amazon.co.jp/%EF%BC%93%EF%BC%96%EF%BC%96%E6%97%A5-%E6%96%B0%E5%9F%8E%E6%AF%85%E5%BD%A6/dp/B0F7S43D4W</string>
 		</dict>
 		<key>B1A9F8DC-C6E3-46FB-B520-1956AFE301CA</key>
 		<dict>

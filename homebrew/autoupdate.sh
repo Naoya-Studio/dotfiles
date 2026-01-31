@@ -19,5 +19,5 @@ if brew autoupdate status 2>/dev/null | grep -q "running"; then
 fi
 
 echo "  Enabling Homebrew autoupdate..."
-brew autoupdate start --upgrade --cleanup
+brew autoupdate start --upgrade --greedy --cleanup --ac-only
 

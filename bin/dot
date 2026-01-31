@@ -16,8 +16,9 @@ displayUsageAndExit() {
   echo "Usage: dot [options]"
   echo ""
   echo "Options:"
-  echo "  -e, --edit  Open dotfiles directory for editing"
-  echo "  -h, --help  Show this help message and exit"
+  echo "  -e, --edit   Open dotfiles directory for editing"
+  echo "  -u, --update Dump Brewfile from current state, commit and push"
+  echo "  -h, --help   Show this help message and exit"
   exit
 }
 
@@ -30,6 +31,13 @@ while test $# -gt 0; do
       exec "$EDITOR" "$dotfilesDirectory"
       exit
       ;;
+    "-u"|"--update")
+      export DOTFILES="$dotfilesDirectory"
+      (cd "$DOTFILES" && brew bundle dump --force)
+      (cd "$DOTFILES" && git add -A && git diff --cached --quiet) && echo "Nothing to commit" || \
+        (cd "$DOTFILES" && git commit -m "chore: sync dotfiles state" && git push)
+      exit
+      ;;
     *)
       echo "Invalid option: $1"
       displayUsageAndExit
@@ -39,6 +47,10 @@ while test $# -gt 0; do
 done
 
 export DOTFILES=$HOME/dotfiles
+
+# Authenticate sudo once so homebrew/install, script/install, set-defaults don't each prompt
+echo "› sudo (once for this run)"
+sudo -v
 
 # Update dotfiles themselves
 echo "› git pull"
