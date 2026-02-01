@@ -1,4 +1,4 @@
-# naoya's dotfiles
+# Naoya's dotfiles
 
 Personal dotfiles for macOS, inspired by [holman/dotfiles](https://github.com/holman/dotfiles).
 
