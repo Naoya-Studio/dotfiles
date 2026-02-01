@@ -8,7 +8,17 @@ Personal dotfiles for macOS, inspired by [holman/dotfiles](https://github.com/ho
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full
 ```
 
-This will:
+### Homebrew only (no dotfiles)
+
+If you only want Homebrew (Xcode CLT + license + brew, no clone, no gh):
+
+```sh
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/install-homebrew-only)"
+```
+
+---
+
+Full setup will:
 1. Install Xcode Command Line Tools
 2. Accept Xcode license
 3. Install Homebrew
