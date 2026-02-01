@@ -1,10 +1,16 @@
 #!/bin/bash
 #
-# One-liner setup script for new machines
-# Usage (full):
+# One entry point for setup. Pass one mode as first argument (with or without --).
+#
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)"
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full
-# Usage (core, includes Alfred + Touch ID):
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- core
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- homebrew
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- alfred
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- git
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- macos
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- github
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- ghostty
 #
 
 set -e
@@ -12,93 +18,184 @@ set -e
 DOTFILES_REPO="https://github.com/Naoya-Studio/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
 
-MODE="${1:-full}"
-if [ "$MODE" != "full" ] && [ "$MODE" != "core" ]; then
-    echo "Usage: setup [full|core]"
-    exit 2
-fi
+# Parse mode: full, core, homebrew, alfred, git, macos, github, ghostty (with or without --)
+RAW="${1:-full}"
+MODE="${RAW#--}"
+case "$MODE" in
+  full|core|homebrew|alfred|git|macos|github|ghostty) ;;
+  *) echo "Usage: setup [--full|--core|--homebrew|--alfred|--git|--macos|--github|--ghostty]"; exit 2 ;;
+esac
 
 echo ""
-echo "=== Dotfiles Setup ==="
+echo "=== Dotfiles Setup ($MODE) ==="
 echo ""
 
-# Install Xcode Command Line Tools if needed
-if ! xcode-select -p &>/dev/null; then
-    echo "Installing Xcode Command Line Tools..."
-    xcode-select --install
-    echo "Waiting for Xcode Command Line Tools installation..."
-    until xcode-select -p &>/dev/null; do
-        sleep 5
-    done
-    echo "Xcode Command Line Tools installed!"
+# --- macOS only checks ---
+if [ "$(uname -s)" != "Darwin" ]; then
+  if [ "$MODE" = "homebrew" ]; then
+    echo "Homebrew on Linux: https://docs.brew.sh/Homebrew-on-Linux"
+  else
+    echo "This script is for macOS. Use full/core on a Mac."
+  fi
+  exit 1
 fi
 
-# Authenticate sudo once so license accept and Homebrew install don't each prompt
-echo "Authenticating sudo (once for this setup)..."
-sudo -v
-
-# Accept Xcode license
-if /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
-    echo "Accepting Xcode license..."
-    sudo xcodebuild -license accept
+# --- Xcode Command Line Tools (needed for full, core, homebrew, and anything that uses brew) ---
+need_xcode() {
+  [ "$MODE" = "full" ] || [ "$MODE" = "core" ] || [ "$MODE" = "homebrew" ] || [ "$MODE" = "alfred" ] || [ "$MODE" = "github" ] || [ "$MODE" = "ghostty" ]
+}
+if need_xcode && ! xcode-select -p &>/dev/null; then
+  echo "Installing Xcode Command Line Tools..."
+  xcode-select --install
+  echo "When the installer finishes, run this script again."
+  exit 0
 fi
 
-# Install Homebrew if needed
-if ! command -v brew &>/dev/null; then
-    echo "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    
-    # Set up PATH for this session
-    if [[ $(uname -m) == "arm64" ]]; then
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-    else
-        eval "$(/usr/local/bin/brew shellenv)"
-    fi
+# --- Sudo (for full, core, homebrew, macos) ---
+need_sudo() {
+  [ "$MODE" = "full" ] || [ "$MODE" = "core" ] || [ "$MODE" = "homebrew" ] || [ "$MODE" = "macos" ]
+}
+if need_sudo; then
+  echo "Authenticating sudo (once)..."
+  sudo -v
 fi
 
-# Install git and gh via Homebrew (in case system git is outdated)
-echo "Installing gh..."
-brew install gh
+# --- Xcode license (same as need_sudo for practical purposes) ---
+if need_sudo && /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
+  echo "Accepting Xcode license..."
+  sudo xcodebuild -license accept
+fi
 
-# Authenticate with GitHub if needed
-if ! gh auth status &>/dev/null; then
-    echo ""
+# --- Git only: no Homebrew, just git config ---
+if [ "$MODE" = "git" ]; then
+  echo "Setting Git user.name and user.email (global)."
+  read -p "Git user.name: " GIT_NAME
+  read -p "Git user.email: " GIT_EMAIL
+  git config --global user.name "$GIT_NAME"
+  git config --global user.email "$GIT_EMAIL"
+  echo "Done."
+  exit 0
+fi
+
+# --- Homebrew only: no clone, no gh ---
+if [ "$MODE" = "homebrew" ]; then
+  if command -v brew &>/dev/null; then
+    echo "Homebrew is already installed: $(brew --prefix)"
+    exit 0
+  fi
+  echo "Installing Homebrew..."
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  if [[ $(uname -m) == "arm64" ]]; then
+    BREW_PREFIX="/opt/homebrew"
+  else
+    BREW_PREFIX="/usr/local"
+  fi
+  eval "$($BREW_PREFIX/bin/brew shellenv)"
+  PROFILE="$HOME/.zprofile"
+  SHELLENV_LINE="eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+  if [ -f "$PROFILE" ] && grep -q "brew shellenv" "$PROFILE"; then
+    echo "brew already in $PROFILE"
+  else
+    echo "" >> "$PROFILE"
+    echo "# Homebrew" >> "$PROFILE"
+    echo "$SHELLENV_LINE" >> "$PROFILE"
+    echo "Added brew to $PROFILE"
+  fi
+  echo "Done. Open a new terminal or run: eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+  exit 0
+fi
+
+# --- From here: need Homebrew for gh / brew install ---
+need_brew() {
+  [ "$MODE" = "full" ] || [ "$MODE" = "core" ] || [ "$MODE" = "alfred" ] || [ "$MODE" = "macos" ] || [ "$MODE" = "github" ] || [ "$MODE" = "ghostty" ]
+}
+if need_brew && ! command -v brew &>/dev/null; then
+  echo "Homebrew is required for this mode. Run: bash -c \"\$(curl -fsSL .../script/setup)\" -- homebrew"
+  exit 1
+fi
+if need_brew; then
+  if [[ $(uname -m) == "arm64" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || true
+  else
+    eval "$(/usr/local/bin/brew shellenv)" 2>/dev/null || true
+  fi
+fi
+
+# --- GitHub CLI: gh auth only ---
+if [ "$MODE" = "github" ]; then
+  if ! command -v gh &>/dev/null; then
+    brew install gh
+  fi
+  gh auth login
+  echo "Done."
+  exit 0
+fi
+
+# --- Ghostty: install cask only ---
+if [ "$MODE" = "ghostty" ]; then
+  brew install --cask ghostty
+  echo "Done. Config: ~/.config/ghostty/config or in-app."
+  exit 0
+fi
+
+# --- Clone dotfiles (for full, core, alfred, macos) ---
+need_clone() {
+  [ "$MODE" = "full" ] || [ "$MODE" = "core" ] || [ "$MODE" = "alfred" ] || [ "$MODE" = "macos" ]
+}
+if need_clone; then
+  if ! command -v gh &>/dev/null; then
+    brew install gh
+  fi
+  if ! gh auth status &>/dev/null; then
     echo "Please authenticate with GitHub:"
     gh auth login
-fi
-
-# Check App Store sign in for mas (only if mas is installed)
-if command -v mas &>/dev/null; then
-    echo ""
-    echo "Checking App Store sign in..."
-    if ! mas account &>/dev/null; then
-        echo "Please sign in to the App Store to install mas apps."
-        echo "Press Enter after signing in..."
-        open -a "App Store"
-        read
-    fi
-fi
-
-# Clone dotfiles
-if [ -d "$DOTFILES_DIR" ]; then
-    echo "Dotfiles already exists at $DOTFILES_DIR"
-    echo "Pulling latest changes..."
+  fi
+  if [ -d "$DOTFILES_DIR" ]; then
+    echo "Dotfiles already at $DOTFILES_DIR, pulling..."
     git -C "$DOTFILES_DIR" pull
-else
+  else
     echo "Cloning dotfiles..."
     git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+  fi
 fi
 
-# Run install
-echo ""
-if [ "$MODE" = "core" ]; then
-    echo "Running quickstart (core)..."
-else
-    echo "Running bootstrap (full)..."
+# --- Alfred only ---
+if [ "$MODE" = "alfred" ]; then
+  cd "$DOTFILES_DIR"
+  ./alfred/install.sh
+  echo "Done."
+  exit 0
 fi
-cd "$DOTFILES_DIR"
-if [ "$MODE" = "core" ]; then
-    ./script/quickstart
-else
-    ./script/bootstrap
+
+# --- macOS defaults only ---
+if [ "$MODE" = "macos" ]; then
+  cd "$DOTFILES_DIR"
+  ./macos/set-defaults.sh
+  echo "Done."
+  exit 0
 fi
+
+# --- Full: bootstrap ---
+if [ "$MODE" = "full" ]; then
+  if command -v mas &>/dev/null; then
+    if ! mas account &>/dev/null; then
+      echo "Sign in to App Store if needed, then press Enter..."
+      open -a "App Store"
+      read
+    fi
+  fi
+  cd "$DOTFILES_DIR"
+  ./script/bootstrap
+  echo "Done."
+  exit 0
+fi
+
+# --- Core: quickstart ---
+if [ "$MODE" = "core" ]; then
+  cd "$DOTFILES_DIR"
+  ./script/quickstart
+  echo "Done."
+  exit 0
+fi
+
+exit 0

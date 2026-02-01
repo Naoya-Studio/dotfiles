@@ -6,21 +6,30 @@ Personal dotfiles for macOS, inspired by [holman/dotfiles](https://github.com/ho
 
 ## Quick start
 
-| Option | One-liner | What it does |
-|--------|-----------|--------------|
-| **Full** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full` | Xcode CLT → license → Homebrew → gh auth → clone this repo → bootstrap (symlinks + install) |
-| **Core** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- core` | Same up to clone, then quickstart (Alfred + shell + tmux + Touch ID). Later: `cd ~/dotfiles && brew bundle` for full |
-
-**Other** (none of these use this repo; standalone commands only)
+One URL, one script; pass a mode (with or without `--`). Default is full.
 
 | Option | Command | What it does |
 |--------|---------|--------------|
-| **Homebrew only** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/install-homebrew-only)"` | Xcode CLT → license → Homebrew only (no clone, no gh). Adds brew to `~/.zprofile`. |
-| **Alfred** | `brew install --cask alfred` then set Cmd+Space in System Settings, disable Spotlight shortcut | Install Alfred, assign Cmd+Space, turn off Spotlight Cmd+Space. |
-| **Git** | `git config --global user.name "..."` / `user.email "..."` | Set Git name and email. |
-| **macOS defaults** | `defaults write -g ApplePressAndHoldEnabled -bool false` etc. | Key repeat, Finder, etc. Touch ID for sudo needs PAM separately. |
-| **GitHub CLI** | `brew install gh` then `gh auth login` | Install gh and authenticate. |
-| **Ghostty** | `brew install --cask ghostty` | Install Ghostty; config in app or `~/.config/ghostty/config`. |
+| **Full** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)"` or `... -- full` | Xcode CLT → license → Homebrew → gh auth → clone this repo → bootstrap (symlinks + install) |
+| **Core** | `... -- core` | Same up to clone, then quickstart (Alfred + shell + tmux + Touch ID). Later: `cd ~/dotfiles && brew bundle` for full |
+
+<details>
+<summary><strong>Other</strong></summary>
+
+Same script, different mode:
+
+| Option | Command | What it does |
+|--------|---------|--------------|
+| **Homebrew only** | `... -- homebrew` | Xcode CLT → license → Homebrew only (no clone, no gh). Adds brew to `~/.zprofile`. |
+| **Alfred** | `... -- alfred` | Clone repo if needed, then run `alfred/install.sh` (Alfred + Cmd+Space, Spotlight off). |
+| **Git** | `... -- git` | Prompt for name/email and set `git config --global`. No Homebrew required. |
+| **macOS** | `... -- macos` | Clone repo if needed, then run `macos/set-defaults.sh` (Touch ID for sudo, key repeat, Finder). |
+| **GitHub CLI** | `... -- github` | Install gh if needed, run `gh auth login`. |
+| **Ghostty** | `... -- ghostty` | `brew install --cask ghostty`. Config in app or `~/.config/ghostty/config`. |
+
+Use the full curl URL in place of `...` (same as Full/Core).
+
+</details>
 
 ---
 
