@@ -2,170 +2,92 @@
 
 Personal dotfiles for macOS, inspired by [holman/dotfiles](https://github.com/holman/dotfiles).
 
-## New Mac Setup (One-liner)
+---
+
+## Quick start
+
+| Option | One-liner | What it does |
+|--------|-----------|--------------|
+| **Full** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full` | Xcode CLT → license → Homebrew → gh auth → clone this repo → bootstrap (symlinks + install) |
+| **Core** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- core` | Same up to clone, then quickstart (Alfred + shell + tmux + Touch ID). Later: `cd ~/dotfiles && brew bundle` for full |
+| **Homebrew only** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/install-homebrew-only)"` | Xcode CLT → license → Homebrew only (no clone, no gh). Adds brew to `~/.zprofile` |
+
+---
+
+## What you get
+
+- **Homebrew** — packages, casks, mas (see `Brewfile`); autoupdate every 24h; passwordless sudo for brew
+- **macOS** — Touch ID for sudo (tmux OK), key repeat, Finder, etc.
+- **Alfred** — Cmd+Space, Spotlight off, prefs in dotfiles
+- **Shell** — zsh, starship, PATH in `system/path.zsh` (includes `~/dotfiles/bin` so `dot` works)
+
+---
+
+## Daily use
+
+| Action | Command |
+|--------|--------|
+| Update everything (pull, brew, installers, macOS defaults) | `dot` |
+| Sync current state to GitHub (Brewfile + all changes, commit & push) | `dot --update` |
+| Install from Brewfile | `brew bundle` |
+| Open dotfiles in editor | `dot --edit` |
+
+**First time after clone (or manual install):**
 
 ```sh
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full
-```
-
-### Homebrew only (no dotfiles)
-
-If you only want Homebrew (Xcode CLT + license + brew, no clone, no gh):
-
-```sh
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/install-homebrew-only)"
+./script/bootstrap   # Symlinks + run installers
+# or
+./script/install     # Run installers only (no symlinks)
 ```
 
 ---
 
-Full setup will:
-1. Install Xcode Command Line Tools
-2. Accept Xcode license
-3. Install Homebrew
-4. Install & authenticate GitHub CLI
-5. Clone this repo
-6. Run bootstrap (install all apps, configure macOS, etc.)
+## Reference
 
-## Faster First Setup (Core only, includes Alfred)
-
-If you want a quicker “get productive first” setup (Alfred + shell + tmux + Touch ID for sudo):
-
-```sh
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- core
-```
-
-Then later run the full install:
-
-```sh
-cd ~/dotfiles
-brew bundle
-```
-
-## What Gets Installed
-
-- **Homebrew packages**: See `Brewfile`
-- **Mac App Store apps**: Via `mas` in `Brewfile`
-- **VS Code extensions**: Via `vscode` in `Brewfile`
-- **macOS settings**: Touch ID for sudo, key repeat, Finder settings, etc.
-- **Alfred**: With Cmd+Space hotkey and synced preferences
-- **Shell**: zsh with starship prompt
-
-## Commands
-
-### Initial Setup
-```sh
-./script/bootstrap     # Full setup (symlinks + install)
-./script/install       # Run installers only
-```
-
-### Maintenance
-```sh
-dot                    # Update everything (pull, brew update, etc.)
-brew bundle            # Install apps from Brewfile
-brew bundle cleanup --force  # Remove apps not in Brewfile
-brew bundle dump --force     # Update Brewfile with current apps
-```
-
-### Updating dotfiles (recording current state)
-When you change your machine (e.g. install an app via `brew install`), update the repo so the cloud has the latest:
-
-**All tracked changes** (easiest):
-   ```sh
-   dot --update
-   ```
-   This runs `brew bundle dump --force`, then stages all changes in the repo (Brewfile, alfred/, configs, etc.), commits and pushes. One command to sync your current state to the cloud.
-
-### Individual Installers
-```sh
-./homebrew/install.sh  # Homebrew + autoupdate + passwordless sudo
-./macos/set-defaults.sh # macOS settings + Touch ID for sudo
-./alfred/install.sh    # Alfred preferences + Spotlight disable
-./git/install.sh       # Git user config (prompts for name/email)
-./github/install.sh    # GitHub CLI authentication
-./ghostty/install.sh   # Ghostty terminal config
-```
-
-### Git Config
-```sh
-./git/install.sh         # First time setup (prompts)
-./git/install.sh --force # Reconfigure
-```
-
-## Structure
+### Directory layout
 
 ```
 dotfiles/
-├── alfred/              # Alfred preferences & install
-├── bin/dot              # Maintenance script
-├── Brewfile             # Homebrew packages, casks, mas apps
-├── ghostty/             # Ghostty terminal config
-├── git/                 # Git config & install
-├── github/              # GitHub CLI install
-├── homebrew/            # Homebrew install & autoupdate
-├── macos/               # macOS settings (Touch ID, etc.)
+├── bin/dot              # dot, dot --update, dot --edit
 ├── script/
-│   ├── bootstrap        # Initial setup
-│   ├── install          # Run installers
-│   └── setup            # One-liner setup script
-├── system/              # PATH & environment
-├── tmux/                # tmux config
-└── zsh/                 # zsh config
+│   ├── setup            # One-liner entry (full / core)
+│   ├── install-homebrew-only
+│   ├── bootstrap        # Symlinks + dot
+│   ├── install          # All install.sh + brew bundle + set-defaults
+│   └── suggest-commit   # Used by dot --update for commit message
+├── homebrew/            # Homebrew install, autoupdate
+├── macos/               # set-defaults (Touch ID, Finder, etc.)
+├── alfred/              # Alfred prefs + install
+├── git/, github/        # Git & gh config
+├── ghostty/, tmux/, zsh/
+├── system/              # PATH, env
+└── Brewfile
 ```
 
-## Components
+### Run installers individually
 
-- **topic/*.zsh**: Loaded into shell environment
-- **topic/path.zsh**: Loaded first, sets up `$PATH`
-- **topic/install.sh**: Executed by `script/install`
-- **topic/*.symlink**: Symlinked to `$HOME` (without `.symlink` extension)
+```sh
+./homebrew/install.sh   # Homebrew + passwordless sudo for brew
+./macos/set-defaults.sh  # macOS + Touch ID for sudo
+./alfred/install.sh     # Alfred + Spotlight off
+./git/install.sh        # Git user (name/email); --force to reconfigure
+./github/install.sh     # gh auth
+./ghostty/install.sh    # Ghostty config
+```
 
-## Features
+### How dotfiles are loaded
 
-### Touch ID for sudo
-Works in tmux too (via `pam-reattach`). Configured automatically.
+- **Symlinks** — `*.symlink` → `~/.filename` (e.g. `zshrc.symlink` → `~/.zshrc`)
+- **PATH** — `system/path.zsh` adds `~/dotfiles/bin` (and others); loaded from zshrc
+- **Install scripts** — `script/install` runs every `*/install.sh`
 
-### Homebrew Autoupdate
-Auto-updates every 24 hours. Passwordless sudo for brew.
-(Enabled after `brew bundle` via the `homebrew/autoupdate` tap.)
-
-### Alfred
-- Cmd+Space hotkey (Spotlight disabled)
-- Preferences synced across Macs
-
-### Git
-- User config prompted on first run
-- Reconfigure with `./git/install.sh --force`
+---
 
 ## Troubleshooting
 
-### sudo: unable to initialize PAM
-If you uninstall Homebrew while Touch ID for sudo is enabled, `sudo` can break because `/etc/pam.d/sudo_local` may reference `pam_reattach.so` under Homebrew.
-
-**Before uninstalling Homebrew**, run:
-
-```sh
-cd ~/dotfiles
-./script/pre-uninstall-homebrew
-```
-
-This rewrites `sudo_local` to remove Homebrew references and keeps password fallback working.
-
-If `sudo` is already broken, delete `sudo_local` from Recovery Mode (or rewrite it to only include `pam_tid.so`).
-
-### Spotlight still responds to Cmd+Space
-Log out and back in, or:
-```sh
-killall cfprefsd
-killall SystemUIServer
-```
-
-### Alfred settings not applied
-```sh
-killall Alfred
-./alfred/install.sh
-```
-
-### brew command not found
-```sh
-eval "$(/opt/homebrew/bin/brew shellenv)"
-```
+| Issue | Fix |
+|-------|-----|
+| **sudo: unable to initialize PAM** (after uninstalling Homebrew) | Before uninstalling: `./script/pre-uninstall-homebrew`. If already broken: delete `/etc/pam.d/sudo_local` in Recovery Mode. |
+| **Spotlight still Cmd+Space** | Log out/in, or `killall cfprefsd; killall SystemUIServer` |
+| **Alfred settings not applied** | `killall Alfred; ./alfred/install.sh` |
+| **brew not found** | `eval "$(/opt/homebrew/bin/brew shellenv)"` or open a new terminal (if you used install-homebrew-only, it’s in `~/.zprofile`) |
