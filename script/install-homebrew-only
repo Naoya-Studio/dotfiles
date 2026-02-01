@@ -46,17 +46,24 @@ echo "Installing Homebrew..."
 
 # PATH for this session
 if [[ $(uname -m) == "arm64" ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
+    BREW_PREFIX="/opt/homebrew"
 else
-    eval "$(/usr/local/bin/brew shellenv)"
+    BREW_PREFIX="/usr/local"
+fi
+eval "$($BREW_PREFIX/bin/brew shellenv)"
+
+# Add brew to shell profile so new terminals get PATH (skip if already there)
+PROFILE="$HOME/.zprofile"
+SHELLENV_LINE="eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+if [ -f "$PROFILE" ] && grep -q "brew shellenv" "$PROFILE"; then
+    echo "brew already in $PROFILE"
+else
+    echo "" >> "$PROFILE"
+    echo "# Homebrew" >> "$PROFILE"
+    echo "$SHELLENV_LINE" >> "$PROFILE"
+    echo "Added brew to $PROFILE"
 fi
 
 echo ""
-echo "Done. Add to your shell profile (~/.zshrc or ~/.bash_profile) so brew is in PATH in new shells:"
-echo ""
-if [[ $(uname -m) == "arm64" ]]; then
-    echo '  eval "$(/opt/homebrew/bin/brew shellenv)"'
-else
-    echo '  eval "$(/usr/local/bin/brew shellenv)"'
-fi
+echo "Done. Open a new terminal (or run: eval \"\$($BREW_PREFIX/bin/brew shellenv)\") so brew is in PATH."
 echo ""
