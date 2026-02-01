@@ -10,7 +10,16 @@ Personal dotfiles for macOS, inspired by [holman/dotfiles](https://github.com/ho
 |--------|-----------|--------------|
 | **Full** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full` | Xcode CLT → license → Homebrew → gh auth → clone this repo → bootstrap (symlinks + install) |
 | **Core** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- core` | Same up to clone, then quickstart (Alfred + shell + tmux + Touch ID). Later: `cd ~/dotfiles && brew bundle` for full |
-| **Homebrew only** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/install-homebrew-only)"` | Xcode CLT → license → Homebrew only (no clone, no gh). Adds brew to `~/.zprofile` |
+
+<details>
+<summary><strong>Homebrew only</strong> (no dotfiles)</summary>
+
+Xcode CLT → license → Homebrew only (no clone, no gh). Adds brew to `~/.zprofile`.
+
+```sh
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/install-homebrew-only)"
+```
+</details>
 
 ---
 
@@ -25,12 +34,29 @@ Personal dotfiles for macOS, inspired by [holman/dotfiles](https://github.com/ho
 
 ## Daily use
 
-| Action | Command |
-|--------|--------|
-| Update everything (pull, brew, installers, macOS defaults) | `dot` |
-| Sync current state to GitHub (Brewfile + all changes, commit & push) | `dot --update` |
-| Install from Brewfile | `brew bundle` |
-| Open dotfiles in editor | `dot --edit` |
+**Update everything** (pull, brew, installers, macOS defaults):
+
+```sh
+dot
+```
+
+**Sync current state to GitHub** (Brewfile + all changes, commit & push):
+
+```sh
+dot --update
+```
+
+**Install from Brewfile:**
+
+```sh
+brew bundle
+```
+
+**Open dotfiles in editor:**
+
+```sh
+dot --edit
+```
 
 **First time after clone (or manual install):**
 
@@ -68,11 +94,11 @@ dotfiles/
 
 ```sh
 ./homebrew/install.sh   # Homebrew + passwordless sudo for brew
-./macos/set-defaults.sh  # macOS + Touch ID for sudo
-./alfred/install.sh     # Alfred + Spotlight off
-./git/install.sh        # Git user (name/email); --force to reconfigure
-./github/install.sh     # gh auth
-./ghostty/install.sh    # Ghostty config
+./macos/set-defaults.sh   # macOS + Touch ID for sudo
+./alfred/install.sh      # Alfred + Spotlight off
+./git/install.sh         # Git user (name/email); --force to reconfigure
+./github/install.sh      # gh auth
+./ghostty/install.sh     # Ghostty config
 ```
 
 ### How dotfiles are loaded
@@ -85,9 +111,31 @@ dotfiles/
 
 ## Troubleshooting
 
-| Issue | Fix |
-|-------|-----|
-| **sudo: unable to initialize PAM** (after uninstalling Homebrew) | Before uninstalling: `./script/pre-uninstall-homebrew`. If already broken: delete `/etc/pam.d/sudo_local` in Recovery Mode. |
-| **Spotlight still Cmd+Space** | Log out/in, or `killall cfprefsd; killall SystemUIServer` |
-| **Alfred settings not applied** | `killall Alfred; ./alfred/install.sh` |
-| **brew not found** | `eval "$(/opt/homebrew/bin/brew shellenv)"` or open a new terminal (if you used install-homebrew-only, it’s in `~/.zprofile`) |
+### sudo: unable to initialize PAM (after uninstalling Homebrew)
+
+Before uninstalling: `./script/pre-uninstall-homebrew`.  
+If already broken: delete `/etc/pam.d/sudo_local` in Recovery Mode.
+
+### Spotlight still Cmd+Space
+
+Log out/in, or:
+
+```sh
+killall cfprefsd
+killall SystemUIServer
+```
+
+### Alfred settings not applied
+
+```sh
+killall Alfred
+./alfred/install.sh
+```
+
+### brew command not found
+
+```sh
+eval "$(/opt/homebrew/bin/brew shellenv)"
+```
+
+Or open a new terminal (if you used install-homebrew-only, it’s in `~/.zprofile`).
