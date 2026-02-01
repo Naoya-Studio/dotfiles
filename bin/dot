@@ -34,8 +34,21 @@ while test $# -gt 0; do
     "-u"|"--update")
       export DOTFILES="$dotfilesDirectory"
       (cd "$DOTFILES" && brew bundle dump --force)
-      (cd "$DOTFILES" && git add -A && git diff --cached --quiet) && echo "Nothing to commit" || \
-        (cd "$DOTFILES" && git commit -m "$("$DOTFILES/script/suggest-commit")" && git push)
+      (cd "$DOTFILES" && git add -A)
+      if (cd "$DOTFILES" && git diff --cached --quiet); then
+        echo "Nothing to commit"
+        exit 0
+      fi
+      echo ""
+      ADDED=$(cd "$DOTFILES" && git diff --cached Brewfile 2>/dev/null | grep '^+' | grep -v '^+++')
+      REMOVED=$(cd "$DOTFILES" && git diff --cached Brewfile 2>/dev/null | grep '^-' | grep -v '^---')
+      LIMIT=20
+      [ -n "$ADDED" ] && echo "added ----" && echo "$ADDED" | head -n "$LIMIT" && \
+        ADDED_COUNT=$(echo "$ADDED" | wc -l | tr -d ' ') && [ "$ADDED_COUNT" -gt "$LIMIT" ] && echo "... and $((ADDED_COUNT - LIMIT)) more" && echo ""
+      [ -n "$REMOVED" ] && echo "removed ----" && echo "$REMOVED" | head -n "$LIMIT" && \
+        REMOVED_COUNT=$(echo "$REMOVED" | wc -l | tr -d ' ') && [ "$REMOVED_COUNT" -gt "$LIMIT" ] && echo "... and $((REMOVED_COUNT - LIMIT)) more" && echo ""
+      echo ""
+      (cd "$DOTFILES" && git commit -m "$("$DOTFILES/script/suggest-commit")" && git push)
       exit
       ;;
     *)

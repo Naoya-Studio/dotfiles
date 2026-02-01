@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Suggest a commit message from staged files: title = what changed, body = file list.
+# Suggest a commit message for GitHub: short subject, then Added/Removed (Brewfile), then Changed files.
 
 set -e
 cd "$(git rev-parse --show-toplevel)"
@@ -10,14 +10,37 @@ if [ -z "$files" ]; then
   exit 0
 fi
 
-# Top-level paths for title (Brewfile, alfred, macos, zsh, ...)
+# Top-level paths for subject (Brewfile, alfred, macos, ...)
 tops="$(echo "$files" | while IFS= read -r f; do echo "$f" | cut -d/ -f1; done | sort -u)"
 title_parts="$(echo "$tops" | paste -sd, - | sed 's/,/, /g')"
 
-# Title: what changed
+# Subject line (keep under ~72 chars for GitHub)
 echo "chore: update $title_parts"
 echo ""
-# Body: list of changed files
+
+# Brewfile: Added / Removed (max 15 each for readable history)
+LIST_LIMIT=15
+if echo "$files" | grep -q '^Brewfile$'; then
+  ADDED=$(git diff --cached Brewfile 2>/dev/null | grep '^+' | grep -v '^+++' | sed 's/^+//' | head -n "$LIST_LIMIT")
+  REMOVED=$(git diff --cached Brewfile 2>/dev/null | grep '^-' | grep -v '^---' | sed 's/^-//' | head -n "$LIST_LIMIT")
+  ADDED_COUNT=$(git diff --cached Brewfile 2>/dev/null | grep '^+' | grep -v '^+++' | wc -l | tr -d ' ')
+  REMOVED_COUNT=$(git diff --cached Brewfile 2>/dev/null | grep '^-' | grep -v '^---' | wc -l | tr -d ' ')
+
+  if [ -n "$ADDED" ]; then
+    echo "Added:"
+    echo "$ADDED" | while IFS= read -r line; do echo "  $line"; done
+    [ "$ADDED_COUNT" -gt "$LIST_LIMIT" ] && echo "  ... and $((ADDED_COUNT - LIST_LIMIT)) more"
+    echo ""
+  fi
+  if [ -n "$REMOVED" ]; then
+    echo "Removed:"
+    echo "$REMOVED" | while IFS= read -r line; do echo "  $line"; done
+    [ "$REMOVED_COUNT" -gt "$LIST_LIMIT" ] && echo "  ... and $((REMOVED_COUNT - LIST_LIMIT)) more"
+    echo ""
+  fi
+fi
+
+# Other changed files
 echo "Changed:"
-echo "$files" | while IFS= read -r f; do echo "- $f"; done
+echo "$files" | while IFS= read -r f; do echo "  - $f"; done
 exit 0
