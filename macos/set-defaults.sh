@@ -57,33 +57,15 @@ defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
 # Disable auto-correct
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
 
-# Enable Touch ID for sudo (works in tmux too with pam-reattach)
+# Enable Touch ID for sudo (normal terminal only; for tmux use --tmux)
 if grep -q pam_tid /etc/pam.d/sudo_local 2>/dev/null; then
     echo "Touch ID for sudo is already configured in sudo_local"
 else
-    # Determine pam_reattach.so path based on architecture
-    if [ "$(uname -m)" = "arm64" ]; then
-        PAM_REATTACH="/opt/homebrew/lib/pam/pam_reattach.so"
-    else
-        PAM_REATTACH="/usr/local/lib/pam/pam_reattach.so"
-    fi
-
     echo "Configuring Touch ID for sudo..."
-    # Create sudo_local.
-    # - pam_tid.so provides Touch ID; on failure, sudo falls back to password.
-    # - pam_reattach.so is only included if installed (tmux compatibility).
-    if [ -f "$PAM_REATTACH" ]; then
-        sudo tee /etc/pam.d/sudo_local > /dev/null <<EOF
-# sudo_local: local config file which survives system update
-auth       optional       $PAM_REATTACH
-auth       sufficient     pam_tid.so
-EOF
-    else
-        sudo tee /etc/pam.d/sudo_local > /dev/null <<EOF
+    sudo tee /etc/pam.d/sudo_local > /dev/null <<EOF
 # sudo_local: local config file which survives system update
 auth       sufficient     pam_tid.so
 EOF
-    fi
     echo "Touch ID for sudo has been enabled (password fallback available)"
 fi
 

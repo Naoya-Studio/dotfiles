@@ -6,28 +6,29 @@ Personal dotfiles for macOS, inspired by [holman/dotfiles](https://github.com/ho
 
 ## Quick start
 
-One URL, one script; pass a mode (with or without `--`). Default is full.
+**Full** (Xcode CLT → license → Homebrew → gh auth → clone this repo → bootstrap):
 
-| Option | Command | What it does |
-|--------|---------|--------------|
-| **Full** | `bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)"` or `... -- full` | Xcode CLT → license → Homebrew → gh auth → clone this repo → bootstrap (symlinks + install) |
-| **Core** | `... -- core` | Same up to clone, then quickstart (Alfred + shell + tmux + Touch ID). Later: `cd ~/dotfiles && brew bundle` for full |
+```sh
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)"
+```
 
 <details>
 <summary><strong>Other</strong></summary>
 
-Same script, different mode:
+Same URL; pass one or more modes (no space after `--`): `--core`, `--homebrew`, `--alfred`, `--git`, `--macos`, `--tmux`, `--github`, `--ghostty`. Multiple run in order: homebrew → git → github → ghostty → alfred → macos → tmux.
 
 | Option | Command | What it does |
 |--------|---------|--------------|
-| **Homebrew only** | `... -- homebrew` | Xcode CLT → license → Homebrew only (no clone, no gh). Adds brew to `~/.zprofile`. |
-| **Alfred** | `... -- alfred` | Clone repo if needed, then run `alfred/install.sh` (Alfred + Cmd+Space, Spotlight off). |
-| **Git** | `... -- git` | Prompt for name/email and set `git config --global`. No Homebrew required. |
-| **macOS** | `... -- macos` | Clone repo if needed, then run `macos/set-defaults.sh` (Touch ID for sudo, key repeat, Finder). |
-| **GitHub CLI** | `... -- github` | Install gh if needed, run `gh auth login`. |
-| **Ghostty** | `... -- ghostty` | `brew install --cask ghostty`. Config in app or `~/.config/ghostty/config`. |
+| **Core** | `... --core` | Same up to clone, then quickstart (Alfred + shell + tmux + Touch ID). Later: `cd ~/dotfiles && brew bundle` for full. |
+| **Homebrew only** | `... --homebrew` | Xcode CLT → license → Homebrew only (no clone, no gh). Adds brew to `~/.zprofile`. |
+| **Alfred** | `... --alfred` | Clone repo if needed, then run `alfred/install.sh` (Alfred + Cmd+Space, Spotlight off). |
+| **Git** | `... --git` | Prompt for name/email and set `git config --global`. No Homebrew required. |
+| **macOS** | `... --macos` | Curl and run `macos/set-defaults.sh` (Touch ID for sudo, key repeat, Finder). No clone. |
+| **Tmux** | `... --tmux` | `brew install tmux pam-reattach`, then set sudo_local so Touch ID works in tmux. |
+| **GitHub CLI** | `... --github` | Install gh if needed, run `gh auth login`. |
+| **Ghostty** | `... --ghostty` | `brew install --cask ghostty`. Config in app or `~/.config/ghostty/config`. |
 
-Use the full curl URL in place of `...` (same as Full/Core).
+Examples: `... --github --homebrew` (run both); `... --alfred --macos` (clone then alfred, then macos). Use the full curl URL in place of `...`.
 
 </details>
 

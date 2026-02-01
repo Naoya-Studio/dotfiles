@@ -1,16 +1,9 @@
 #!/bin/bash
 #
-# One entry point for setup. Pass one mode as first argument (with or without --).
+# One entry point. Pass mode(s) with or without --. Multiple modes run in order: homebrew, git, github, ghostty, alfred, macos.
 #
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)"
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- full
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- core
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- homebrew
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- alfred
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- git
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- macos
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- github
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)" -- ghostty
+#   bash -c "$(curl -fsSL .../script/setup)" -- --github --homebrew
 #
 
 set -e
@@ -18,184 +11,267 @@ set -e
 DOTFILES_REPO="https://github.com/Naoya-Studio/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
 
-# Parse mode: full, core, homebrew, alfred, git, macos, github, ghostty (with or without --)
-RAW="${1:-full}"
-MODE="${RAW#--}"
-case "$MODE" in
-  full|core|homebrew|alfred|git|macos|github|ghostty) ;;
-  *) echo "Usage: setup [--full|--core|--homebrew|--alfred|--git|--macos|--github|--ghostty]"; exit 2 ;;
-esac
-
-echo ""
-echo "=== Dotfiles Setup ($MODE) ==="
-echo ""
-
-# --- macOS only checks ---
-if [ "$(uname -s)" != "Darwin" ]; then
-  if [ "$MODE" = "homebrew" ]; then
-    echo "Homebrew on Linux: https://docs.brew.sh/Homebrew-on-Linux"
-  else
-    echo "This script is for macOS. Use full/core on a Mac."
-  fi
-  exit 1
+# Parse all args: strip leading -- so --github and github both work. Default to full if no args.
+MODES=()
+if [ $# -eq 0 ]; then
+  MODES=(full)
+else
+  for a in "$@"; do
+    m="${a#--}"
+    case "$m" in
+      full|core|homebrew|alfred|git|macos|github|ghostty|tmux) MODES+=("$m") ;;
+      *) echo "Usage: setup [--full|--core|--homebrew|--alfred|--git|--macos|--github|--ghostty|--tmux] (multiple OK)"; exit 2 ;;
+    esac
+  done
 fi
 
-# --- Xcode Command Line Tools (needed for full, core, homebrew, and anything that uses brew) ---
-need_xcode() {
-  [ "$MODE" = "full" ] || [ "$MODE" = "core" ] || [ "$MODE" = "homebrew" ] || [ "$MODE" = "alfred" ] || [ "$MODE" = "github" ] || [ "$MODE" = "ghostty" ]
-}
-if need_xcode && ! xcode-select -p &>/dev/null; then
-  echo "Installing Xcode Command Line Tools..."
-  xcode-select --install
-  echo "When the installer finishes, run this script again."
-  exit 0
-fi
-
-# --- Sudo (for full, core, homebrew, macos) ---
-need_sudo() {
-  [ "$MODE" = "full" ] || [ "$MODE" = "core" ] || [ "$MODE" = "homebrew" ] || [ "$MODE" = "macos" ]
-}
-if need_sudo; then
-  echo "Authenticating sudo (once)..."
-  sudo -v
-fi
-
-# --- Xcode license (same as need_sudo for practical purposes) ---
-if need_sudo && /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
-  echo "Accepting Xcode license..."
-  sudo xcodebuild -license accept
-fi
-
-# --- Git only: no Homebrew, just git config ---
-if [ "$MODE" = "git" ]; then
-  echo "Setting Git user.name and user.email (global)."
-  read -p "Git user.name: " GIT_NAME
-  read -p "Git user.email: " GIT_EMAIL
-  git config --global user.name "$GIT_NAME"
-  git config --global user.email "$GIT_EMAIL"
-  echo "Done."
-  exit 0
-fi
-
-# --- Homebrew only: no clone, no gh ---
-if [ "$MODE" = "homebrew" ]; then
-  if command -v brew &>/dev/null; then
-    echo "Homebrew is already installed: $(brew --prefix)"
-    exit 0
-  fi
-  echo "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  if [[ $(uname -m) == "arm64" ]]; then
-    BREW_PREFIX="/opt/homebrew"
-  else
-    BREW_PREFIX="/usr/local"
-  fi
-  eval "$($BREW_PREFIX/bin/brew shellenv)"
-  PROFILE="$HOME/.zprofile"
-  SHELLENV_LINE="eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
-  if [ -f "$PROFILE" ] && grep -q "brew shellenv" "$PROFILE"; then
-    echo "brew already in $PROFILE"
-  else
-    echo "" >> "$PROFILE"
-    echo "# Homebrew" >> "$PROFILE"
-    echo "$SHELLENV_LINE" >> "$PROFILE"
-    echo "Added brew to $PROFILE"
-  fi
-  echo "Done. Open a new terminal or run: eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
-  exit 0
-fi
-
-# --- From here: need Homebrew for gh / brew install ---
-need_brew() {
-  [ "$MODE" = "full" ] || [ "$MODE" = "core" ] || [ "$MODE" = "alfred" ] || [ "$MODE" = "macos" ] || [ "$MODE" = "github" ] || [ "$MODE" = "ghostty" ]
-}
-if need_brew && ! command -v brew &>/dev/null; then
-  echo "Homebrew is required for this mode. Run: bash -c \"\$(curl -fsSL .../script/setup)\" -- homebrew"
-  exit 1
-fi
-if need_brew; then
-  if [[ $(uname -m) == "arm64" ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || true
-  else
-    eval "$(/usr/local/bin/brew shellenv)" 2>/dev/null || true
-  fi
-fi
-
-# --- GitHub CLI: gh auth only ---
-if [ "$MODE" = "github" ]; then
-  if ! command -v gh &>/dev/null; then
-    brew install gh
-  fi
-  gh auth login
-  echo "Done."
-  exit 0
-fi
-
-# --- Ghostty: install cask only ---
-if [ "$MODE" = "ghostty" ]; then
-  brew install --cask ghostty
-  echo "Done. Config: ~/.config/ghostty/config or in-app."
-  exit 0
-fi
-
-# --- Clone dotfiles (for full, core, alfred, macos) ---
-need_clone() {
-  [ "$MODE" = "full" ] || [ "$MODE" = "core" ] || [ "$MODE" = "alfred" ] || [ "$MODE" = "macos" ]
-}
-if need_clone; then
-  if ! command -v gh &>/dev/null; then
-    brew install gh
-  fi
-  if ! gh auth status &>/dev/null; then
-    echo "Please authenticate with GitHub:"
-    gh auth login
-  fi
-  if [ -d "$DOTFILES_DIR" ]; then
-    echo "Dotfiles already at $DOTFILES_DIR, pulling..."
-    git -C "$DOTFILES_DIR" pull
-  else
-    echo "Cloning dotfiles..."
-    git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
-  fi
-fi
-
-# --- Alfred only ---
-if [ "$MODE" = "alfred" ]; then
-  cd "$DOTFILES_DIR"
-  ./alfred/install.sh
-  echo "Done."
-  exit 0
-fi
-
-# --- macOS defaults only ---
-if [ "$MODE" = "macos" ]; then
-  cd "$DOTFILES_DIR"
-  ./macos/set-defaults.sh
-  echo "Done."
-  exit 0
-fi
-
-# --- Full: bootstrap ---
-if [ "$MODE" = "full" ]; then
-  if command -v mas &>/dev/null; then
-    if ! mas account &>/dev/null; then
-      echo "Sign in to App Store if needed, then press Enter..."
-      open -a "App Store"
-      read
+# full/core must be alone; run and exit
+for m in "${MODES[@]}"; do
+  if [ "$m" = "full" ] || [ "$m" = "core" ]; then
+    if [ ${#MODES[@]} -ne 1 ]; then
+      echo "full and core cannot be combined with other modes."
+      exit 2
     fi
   fi
-  cd "$DOTFILES_DIR"
-  ./script/bootstrap
-  echo "Done."
+done
+
+run_mode() {
+  local MODE="$1"
+  echo ""
+  echo "=== $MODE ==="
+  echo ""
+
+  # --- macOS only ---
+  if [ "$(uname -s)" != "Darwin" ]; then
+    if [ "$MODE" = "homebrew" ]; then
+      echo "Homebrew on Linux: https://docs.brew.sh/Homebrew-on-Linux"
+    else
+      echo "This script is for macOS. Use full/core on a Mac."
+    fi
+    exit 1
+  fi
+
+  # --- Xcode CLT (needed for full, core, homebrew, alfred, github, ghostty, tmux) ---
+  need_xcode() {
+    [[ "$MODE" =~ ^(full|core|homebrew|alfred|github|ghostty|tmux)$ ]]
+  }
+  if need_xcode && ! xcode-select -p &>/dev/null; then
+    echo "Installing Xcode Command Line Tools..."
+    xcode-select --install
+    echo "When the installer finishes, run this script again."
+    exit 0
+  fi
+
+  # --- Sudo (full, core, homebrew, macos, tmux) ---
+  need_sudo() {
+    [[ "$MODE" =~ ^(full|core|homebrew|macos|tmux)$ ]]
+  }
+  if need_sudo; then
+    echo "Authenticating sudo (once)..."
+    sudo -v
+  fi
+  if need_sudo && /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
+    echo "Accepting Xcode license..."
+    sudo xcodebuild -license accept
+  fi
+
+  # --- Git only ---
+  if [ "$MODE" = "git" ]; then
+    echo "Setting Git user.name and user.email (global)."
+    read -p "Git user.name: " GIT_NAME
+    read -p "Git user.email: " GIT_EMAIL
+    git config --global user.name "$GIT_NAME"
+    git config --global user.email "$GIT_EMAIL"
+    echo "Done (git)."
+    return 0
+  fi
+
+  # --- Homebrew only ---
+  if [ "$MODE" = "homebrew" ]; then
+    if command -v brew &>/dev/null; then
+      echo "Homebrew is already installed: $(brew --prefix)"
+      return 0
+    fi
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if [[ $(uname -m) == "arm64" ]]; then
+      BREW_PREFIX="/opt/homebrew"
+    else
+      BREW_PREFIX="/usr/local"
+    fi
+    eval "$($BREW_PREFIX/bin/brew shellenv)"
+    PROFILE="$HOME/.zprofile"
+    SHELLENV_LINE="eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+    if [ -f "$PROFILE" ] && grep -q "brew shellenv" "$PROFILE"; then
+      echo "brew already in $PROFILE"
+    else
+      echo "" >> "$PROFILE"
+      echo "# Homebrew" >> "$PROFILE"
+      echo "$SHELLENV_LINE" >> "$PROFILE"
+      echo "Added brew to $PROFILE"
+    fi
+    echo "Done (homebrew). Open a new terminal or run: eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+    return 0
+  fi
+
+  # --- Need brew for github, ghostty, alfred, full, core, tmux ---
+  need_brew() {
+    [[ "$MODE" =~ ^(full|core|alfred|github|ghostty|tmux)$ ]]
+  }
+  ensure_brew() {
+    if command -v brew &>/dev/null; then
+      if [[ $(uname -m) == "arm64" ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)" 2>/dev/null || true
+      else
+        eval "$(/usr/local/bin/brew shellenv)" 2>/dev/null || true
+      fi
+      return 0
+    fi
+    echo "Homebrew not found; installing Homebrew first..."
+    if ! xcode-select -p &>/dev/null; then
+      echo "Installing Xcode Command Line Tools..."
+      xcode-select --install
+      echo "When the installer finishes, run this script again."
+      exit 0
+    fi
+    echo "Authenticating sudo (once)..."
+    sudo -v
+    if /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
+      echo "Accepting Xcode license..."
+      sudo xcodebuild -license accept
+    fi
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    if [[ $(uname -m) == "arm64" ]]; then
+      BREW_PREFIX="/opt/homebrew"
+    else
+      BREW_PREFIX="/usr/local"
+    fi
+    eval "$($BREW_PREFIX/bin/brew shellenv)"
+    PROFILE="$HOME/.zprofile"
+    SHELLENV_LINE="eval \"\$($BREW_PREFIX/bin/brew shellenv)\""
+    if [ -f "$PROFILE" ] && grep -q "brew shellenv" "$PROFILE"; then
+      :
+    else
+      echo "" >> "$PROFILE"
+      echo "# Homebrew" >> "$PROFILE"
+      echo "$SHELLENV_LINE" >> "$PROFILE"
+      echo "Added brew to $PROFILE"
+    fi
+    echo "Homebrew installed. Continuing with $MODE..."
+  }
+  if need_brew; then
+    if ! command -v brew &>/dev/null; then
+      echo "Homebrew is required for $MODE."
+      read -p "Install Homebrew now? [y/N] " -n 1 -r
+      echo
+      if [[ ! $REPLY =~ ^[yY]$ ]]; then
+        echo "Skipping. Run with --homebrew first, or pass --homebrew --$MODE."
+        exit 1
+      fi
+    fi
+    ensure_brew
+  fi
+
+  # --- GitHub CLI ---
+  if [ "$MODE" = "github" ]; then
+    if ! command -v gh &>/dev/null; then
+      brew install gh
+    fi
+    gh auth login
+    echo "Done (github)."
+    return 0
+  fi
+
+  # --- Ghostty ---
+  if [ "$MODE" = "ghostty" ]; then
+    brew install --cask ghostty
+    echo "Done (ghostty). Config: ~/.config/ghostty/config or in-app."
+    return 0
+  fi
+
+  # --- Tmux (tmux + pam-reattach for Touch ID in tmux) ---
+  if [ "$MODE" = "tmux" ]; then
+    brew install tmux pam-reattach
+    TMUX_SUDO_URL="https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/macos/set-sudo-local-tmux.sh"
+    bash -c "$(curl -fsSL "$TMUX_SUDO_URL")"
+    echo "Done (tmux). Touch ID works in tmux; config: clone repo and symlink tmux/tmux.conf.symlink to ~/.tmux.conf."
+    return 0
+  fi
+
+  # --- Clone (full, core, alfred; macos は clone 不要) ---
+  need_clone() {
+    [[ "$MODE" =~ ^(full|core|alfred)$ ]]
+  }
+  if need_clone; then
+    if ! command -v gh &>/dev/null; then
+      brew install gh
+    fi
+    if ! gh auth status &>/dev/null; then
+      echo "Please authenticate with GitHub:"
+      gh auth login
+    fi
+    if [ -d "$DOTFILES_DIR" ]; then
+      echo "Dotfiles already at $DOTFILES_DIR, pulling..."
+      git -C "$DOTFILES_DIR" pull
+    else
+      echo "Cloning dotfiles..."
+      git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+    fi
+  fi
+
+  # --- Alfred ---
+  if [ "$MODE" = "alfred" ]; then
+    (cd "$DOTFILES_DIR" && ./alfred/install.sh)
+    echo "Done (alfred)."
+    return 0
+  fi
+
+  # --- macOS (clone 不要: curl で set-defaults.sh を取得して実行) ---
+  if [ "$MODE" = "macos" ]; then
+    MACOS_SCRIPT_URL="https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/macos/set-defaults.sh"
+    bash -c "$(curl -fsSL "$MACOS_SCRIPT_URL")"
+    echo "Done (macos)."
+    return 0
+  fi
+
+  # --- Full ---
+  if [ "$MODE" = "full" ]; then
+    if command -v mas &>/dev/null; then
+      if ! mas account &>/dev/null; then
+        echo "Sign in to App Store if needed, then press Enter..."
+        open -a "App Store"
+        read
+      fi
+    fi
+    (cd "$DOTFILES_DIR" && ./script/bootstrap)
+    echo "Done (full)."
+    exit 0
+  fi
+
+  # --- Core ---
+  if [ "$MODE" = "core" ]; then
+    (cd "$DOTFILES_DIR" && ./script/quickstart)
+    echo "Done (core)."
+    exit 0
+  fi
+}
+
+# Single mode: full or core → run and exit
+if [ ${#MODES[@]} -eq 1 ]; then
+  run_mode "${MODES[0]}"
   exit 0
 fi
 
-# --- Core: quickstart ---
-if [ "$MODE" = "core" ]; then
-  cd "$DOTFILES_DIR"
-  ./script/quickstart
-  echo "Done."
-  exit 0
-fi
-
-exit 0
+# Multiple modes: run in dependency order (homebrew, git, github, ghostty, alfred, macos, tmux)
+ORDER=(homebrew git github ghostty alfred macos tmux)
+for m in "${ORDER[@]}"; do
+  for requested in "${MODES[@]}"; do
+    if [ "$requested" = "$m" ]; then
+      run_mode "$m"
+      break
+    fi
+  done
+done
+echo ""
+echo "Done (all)."
