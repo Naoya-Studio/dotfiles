@@ -1,64 +1,30 @@
 #!/usr/bin/env bash
 #
-# Install core essentials first (including Alfred).
-#
+# Install core essentials first.
 
 set -e
 cd "$(dirname "$0")"/..
 
-# Keep sudo alive during long runs so Touch ID isn't asked repeatedly
-SUDO_KEEPALIVE_PID=""
 if [ "$(uname -s)" = "Darwin" ]; then
-  sudo -v
-  # Keep-alive: update existing `sudo` time stamp every 10s
-  (while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null) &
-  SUDO_KEEPALIVE_PID=$!
-  trap 'kill $SUDO_KEEPALIVE_PID 2>/dev/null' EXIT
+  echo "> Setting temporary passwordless sudo"
+  echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/dotfiles-temp > /dev/null
+  trap 'sudo rm /etc/sudoers.d/dotfiles-temp 2>/dev/null' EXIT
 fi
 
-echo "› homebrew/install.sh"
 ./homebrew/install.sh
 
-# Ensure brew is available in this session (fresh Homebrew install)
 if ! command -v brew >/dev/null 2>&1; then
-  if [ -x /opt/homebrew/bin/brew ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  elif [ -x /usr/local/bin/brew ]; then
-    eval "$(/usr/local/bin/brew shellenv)"
-  fi
+  [ -x /opt/homebrew/bin/brew ] && eval "$(/opt/homebrew/bin/brew shellenv)"
+  [ -x /usr/local/bin/brew ] && eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-echo "› brew bundle (core)"
+echo "> brew bundle (core)"
 brew bundle --file ./Brewfile.core
 
-# GitHub auth (enables passwordless git push via SSH)
-if [ "$(uname -s)" == "Darwin" ]; then
-  echo "› github/install.sh"
-  ./github/install.sh || true
-fi
-
-# Git user config (name/email)
-echo "› git/install.sh"
+[ "$(uname -s)" == "Darwin" ] && ./github/install.sh || true
 ./git/install.sh || true
+[ "$(uname -s)" == "Darwin" ] && ./macos/set-defaults.sh
+[ "$(uname -s)" == "Darwin" ] && ./alfred/install.sh
+[ "$(uname -s)" == "Darwin" ] && ./homebrew/autoupdate.sh || true
 
-# Apply macOS settings after pam-reattach is installed
-if [ "$(uname -s)" == "Darwin" ]; then
-  echo "› macos/set-defaults.sh"
-  ./macos/set-defaults.sh
-fi
-
-# Alfred setup (hotkey + prefs link)
-if [ "$(uname -s)" == "Darwin" ]; then
-  echo "› alfred/install.sh"
-  ./alfred/install.sh
-fi
-
-if [ "$(uname -s)" == "Darwin" ]; then
-  echo "› homebrew/autoupdate.sh"
-  ./homebrew/autoupdate.sh || true
-fi
-
-echo ""
-echo "Core setup done."
-echo "Next: run full install with: cd ~/dotfiles && brew bundle"
-
+echo "\nCore setup done."

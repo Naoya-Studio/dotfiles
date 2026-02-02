@@ -1,98 +1,22 @@
 #!/bin/sh
 #
-# dot
-#
-# `dot` handles installation, updates, things like that. Run it periodically
-# to make sure you're on the latest and greatest.
+# dot - management script
 
 set -e
+DOTFILES=$HOME/dotfiles
 
-parentDirectory="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P)"
-dotfilesDirectory="$(cd "$( dirname "$parentDirectory" )" && pwd -P)"
-
-displayUsageAndExit() {
-  echo "dot -- dotfiles management"
-  echo ""
-  echo "Usage: dot [options]"
-  echo ""
-  echo "Options:"
-  echo "  -e, --edit   Open dotfiles directory for editing"
-  echo "  -u, --update Dump Brewfile from current state, commit and push"
-  echo "  -h, --help   Show this help message and exit"
-  exit
-}
-
-while test $# -gt 0; do
-  case "$1" in
-    "-h"|"--help")
-      displayUsageAndExit
-      ;;
-    "-e"|"--edit")
-      exec "$EDITOR" "$dotfilesDirectory"
-      exit
-      ;;
-    "-u"|"--update")
-      export DOTFILES="$dotfilesDirectory"
-      (cd "$DOTFILES" && brew bundle dump --force)
-      (cd "$DOTFILES" && git add -A)
-      if (cd "$DOTFILES" && git diff --cached --quiet); then
-        echo "Nothing to commit"
-        exit 0
-      fi
-      echo ""
-      ADDED=$(cd "$DOTFILES" && git diff --cached Brewfile 2>/dev/null | grep '^+' | grep -v '^+++')
-      REMOVED=$(cd "$DOTFILES" && git diff --cached Brewfile 2>/dev/null | grep '^-' | grep -v '^---')
-      LIMIT=20
-      [ -n "$ADDED" ] && echo "added ----" && echo "$ADDED" | head -n "$LIMIT" && \
-        ADDED_COUNT=$(echo "$ADDED" | wc -l | tr -d ' ') && [ "$ADDED_COUNT" -gt "$LIMIT" ] && echo "... and $((ADDED_COUNT - LIMIT)) more" && echo ""
-      [ -n "$REMOVED" ] && echo "removed ----" && echo "$REMOVED" | head -n "$LIMIT" && \
-        REMOVED_COUNT=$(echo "$REMOVED" | wc -l | tr -d ' ') && [ "$REMOVED_COUNT" -gt "$LIMIT" ] && echo "... and $((REMOVED_COUNT - LIMIT)) more" && echo ""
-      echo ""
-      (cd "$DOTFILES" && git commit -m "$("$DOTFILES/script/suggest-commit")" && git push)
-      exit
-      ;;
-    *)
-      echo "Invalid option: $1"
-      displayUsageAndExit
-      ;;
-  esac
-  shift
-done
-
-export DOTFILES=$HOME/dotfiles
-
-# Authenticate sudo once so homebrew/install, script/install, set-defaults don't each prompt
-echo "› sudo (once for this run)"
 if [ "$(uname -s)" = "Darwin" ]; then
-  sudo -v
-  # Keep-alive: update existing `sudo` time stamp every 10s
-  (while true; do sudo -n true; sleep 10; kill -0 "$$" || exit; done 2>/dev/null) &
-  SUDO_KEEPALIVE_PID=$!
-  trap 'kill $SUDO_KEEPALIVE_PID 2>/dev/null' EXIT
-else
-  sudo -v
+  echo "› Setting temporary passwordless sudo"
+  echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/dotfiles-temp > /dev/null
+  trap 'sudo rm /etc/sudoers.d/dotfiles-temp 2>/dev/null' EXIT
 fi
 
-# Update dotfiles themselves
-echo "› git pull"
+# Update
 git -C "$DOTFILES" pull
-
-# Install homebrew
 "$DOTFILES/homebrew/install.sh" 2>&1
-
-# Upgrade homebrew
-echo "› brew update"
 brew update
-
-echo "› brew upgrade"
 brew upgrade
 
-# Install software
-echo "› script/install"
+# Install
 "$DOTFILES/script/install"
-
-# Set macOS defaults (Touch ID setup needs pam-reattach from brew bundle)
-if [ "$(uname -s)" == "Darwin" ]; then
-  echo "› macos/set-defaults.sh"
-  "$DOTFILES/macos/set-defaults.sh"
-fi
+[ "$(uname -s)" == "Darwin" ] && "$DOTFILES/macos/set-defaults.sh"
