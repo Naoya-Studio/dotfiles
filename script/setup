@@ -218,6 +218,7 @@ run_mode() {
       echo "Cloning dotfiles..."
       git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
     fi
+    export PATH="$DOTFILES_DIR/bin:$PATH"
   fi
 
   # --- Alfred ---
