@@ -4,6 +4,15 @@
 
 cd "$(dirname $0)"/..
 
+# Keep sudo alive during long runs so Touch ID isn't asked repeatedly
+SUDO_KEEPALIVE_PID=""
+if [ "$(uname -s)" = "Darwin" ]; then
+  sudo -v
+  (while true; do sleep 240; sudo -v; done) &
+  SUDO_KEEPALIVE_PID=$!
+  trap 'kill $SUDO_KEEPALIVE_PID 2>/dev/null' EXIT
+fi
+
 echo "› brew bundle"
 brew bundle || echo "Some packages failed to install, continuing..."
 
