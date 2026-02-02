@@ -15,10 +15,16 @@ if [ "$(uname -s)" = "Darwin" ]; then
 fi
 
 echo "› brew bundle"
+sudo -v
 brew bundle || echo "Some packages failed to install, continuing..."
+sudo -v
 
 # Find the installers and run them iteratively
-find . -name install.sh | while read installer ; do sh -c "${installer}" ; done
+find . -name install.sh | while read installer ; do
+  echo "› ${installer}"
+  sudo -v
+  sh -c "${installer}"
+done
 
 # Enable Homebrew autoupdate after bundle
 if [ "$(uname -s)" == "Darwin" ]; then
