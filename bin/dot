@@ -6,9 +6,11 @@ set -e
 DOTFILES=$HOME/dotfiles
 
 if [ "$(uname -s)" = "Darwin" ]; then
-  echo "› Setting temporary passwordless sudo"
-  echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/dotfiles-temp > /dev/null
-  trap 'sudo rm /etc/sudoers.d/dotfiles-temp 2>/dev/null' EXIT
+  if [ ! -f /etc/sudoers.d/dotfiles-temp ]; then
+    echo "› Setting temporary passwordless sudo"
+    echo "$USER ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/dotfiles-temp > /dev/null
+    trap 'sudo rm /etc/sudoers.d/dotfiles-temp 2>/dev/null' EXIT
+  fi
 
   # Ensure Xcode license is accepted
   if /usr/bin/xcrun clang 2>&1 | grep -q "license"; then
