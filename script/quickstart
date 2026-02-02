@@ -10,7 +10,7 @@ cd "$(dirname "$0")"/..
 SUDO_KEEPALIVE_PID=""
 if [ "$(uname -s)" = "Darwin" ]; then
   sudo -v
-  (while true; do sleep 240; sudo -v; done) &
+  (while true; do sleep 60; sudo -v; done) &
   SUDO_KEEPALIVE_PID=$!
   trap 'kill $SUDO_KEEPALIVE_PID 2>/dev/null' EXIT
 fi

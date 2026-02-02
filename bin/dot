@@ -63,7 +63,14 @@ export DOTFILES=$HOME/dotfiles
 
 # Authenticate sudo once so homebrew/install, script/install, set-defaults don't each prompt
 echo "› sudo (once for this run)"
-sudo -v
+if [ "$(uname -s)" = "Darwin" ]; then
+  sudo -v
+  (while true; do sleep 60; sudo -v; done) &
+  SUDO_KEEPALIVE_PID=$!
+  trap 'kill $SUDO_KEEPALIVE_PID 2>/dev/null' EXIT
+else
+  sudo -v
+fi
 
 # Update dotfiles themselves
 echo "› git pull"
