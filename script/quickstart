@@ -31,7 +31,7 @@ brew bundle --file ./Brewfile.core
 
 [ "$(uname -s)" == "Darwin" ] && ./github/install.sh || true
 ./git/install.sh || true
-[ "$(uname -s)" == "Darwin" ] && ./macos/set-defaults.sh
+# macos/set-defaults.sh は親プロセス (script/setup 等) で実行するためここでは削除
 [ "$(uname -s)" == "Darwin" ] && ./alfred/install.sh
 [ "$(uname -s)" == "Darwin" ] && ./homebrew/autoupdate.sh || true
 

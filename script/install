@@ -28,5 +28,5 @@ done
 
 if [ "$(uname -s)" == "Darwin" ]; then
     ./homebrew/autoupdate.sh || true
-    ./macos/set-defaults.sh
+    # macos/set-defaults.sh は親プロセス (bin/dot 等) で実行するためここでは削除
 fi
