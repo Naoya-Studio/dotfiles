@@ -10,6 +10,11 @@ set -e
 DOTFILES=$HOME/dotfiles
 
 # --- dot shared: allowlist brew for other users (read-only allowlist, shared prefix) ---
+# Typo: shered → shared
+if [ "$1" = "shered" ] || [ "$1" = "--shered" ]; then
+  echo "Unknown command '$1'. Did you mean: dot shared ?" >&2
+  exit 1
+fi
 if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
   [ "$(uname -s)" != "Darwin" ] && echo "dot shared is for macOS only." && exit 1
   ALLOWED="$DOTFILES/homebrew/allowed.txt"
