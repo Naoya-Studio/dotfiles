@@ -43,13 +43,17 @@ if [ "$subcmd" != "install" ] && [ "$subcmd" != "uninstall" ]; then
   exec "$SHARED_BREW" "$subcmd" "$@"
 fi
 
-# Parse install/uninstall args: [--cask] pkg1 [pkg2 ...]
+# Parse install/uninstall args: [--cask] [--force] [--zap] pkg1 [pkg2 ...]
 pkgs=()
 force_cask=false
+install_extra=()
+uninstall_extra=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --cask) force_cask=true ;;
-    *)      pkgs+=("$1") ;;
+    --force) [ "$subcmd" = "install" ] && install_extra+=("$1") || uninstall_extra+=("$1") ;;
+    --zap)   [ "$subcmd" = "uninstall" ] && uninstall_extra+=("$1") ;;
+    *)       pkgs+=("$1") ;;
   esac
   shift
 done
@@ -98,10 +102,11 @@ run_brew() {
 }
 failed=0
 if [ "$subcmd" = "install" ]; then
-  [ ${#formula_pkgs[@]} -gt 0 ] && run_brew install "${formula_pkgs[@]}" || failed=1
-  [ ${#cask_pkgs[@]} -gt 0 ] && run_brew install --cask "${cask_pkgs[@]}" || failed=1
+  [ ${#formula_pkgs[@]} -gt 0 ] && run_brew install "${install_extra[@]}" "${formula_pkgs[@]}" || failed=1
+  [ ${#cask_pkgs[@]} -gt 0 ] && run_brew install --cask "${install_extra[@]}" "${cask_pkgs[@]}" || failed=1
 else
-  [ ${#formula_pkgs[@]} -gt 0 ] && run_brew uninstall "${formula_pkgs[@]}" || failed=1
-  [ ${#cask_pkgs[@]} -gt 0 ] && run_brew uninstall --cask "${cask_pkgs[@]}" || failed=1
+  [ ${#formula_pkgs[@]} -gt 0 ] && run_brew uninstall "${uninstall_extra[@]}" "${formula_pkgs[@]}" || failed=1
+  [ ${#cask_pkgs[@]} -gt 0 ] && run_brew uninstall --cask "${uninstall_extra[@]}" "${cask_pkgs[@]}" || failed=1
 fi
+exit $failed
 exit $failed
