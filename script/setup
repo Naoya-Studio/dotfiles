@@ -173,7 +173,22 @@ run_mode() {
     ensure_brew
   fi
 
-  # --- GitHub CLI ---
+  # --- GitHub CLI (full/core/alfred: clone の前に gh を入れておく) ---
+  need_clone() {
+    [[ "$MODE" =~ ^(full|core|alfred)$ ]]
+  }
+  if need_clone; then
+    if ! command -v gh &>/dev/null; then
+      echo "Installing GitHub CLI..."
+      brew install gh
+    fi
+    if ! gh auth status &>/dev/null; then
+      echo "Please authenticate with GitHub:"
+      gh auth login
+    fi
+  fi
+
+  # --- GitHub CLI (standalone mode) ---
   if [ "$MODE" = "github" ]; then
     if ! command -v gh &>/dev/null; then
       brew install gh
@@ -199,18 +214,8 @@ run_mode() {
     return 0
   fi
 
-  # --- Clone (full, core, alfred; macos は clone 不要) ---
-  need_clone() {
-    [[ "$MODE" =~ ^(full|core|alfred)$ ]]
-  }
+  # --- Clone (full, core, alfred; gh は上で済ませてある) ---
   if need_clone; then
-    if ! command -v gh &>/dev/null; then
-      brew install gh
-    fi
-    if ! gh auth status &>/dev/null; then
-      echo "Please authenticate with GitHub:"
-      gh auth login
-    fi
     if [ -d "$DOTFILES_DIR" ]; then
       echo "Dotfiles already at $DOTFILES_DIR, pulling..."
       git -C "$DOTFILES_DIR" pull

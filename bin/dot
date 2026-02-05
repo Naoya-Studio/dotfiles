@@ -1,9 +1,28 @@
 #!/bin/sh
 #
 # dot - management script
+#   dot              — update everything (pull, brew, install)
+#   dot --update     — sync current state to GitHub (Brewfile + all changes, commit & push)
 
 set -e
 DOTFILES=$HOME/dotfiles
+
+# --- dot --update: sync to GitHub (Brewfile + all changes, commit & push) ---
+if [ "$1" = "--update" ] || [ "$1" = "update" ]; then
+  echo "› Updating Brewfile..."
+  brew bundle dump -f --file="$DOTFILES/Brewfile"
+  echo "› Staging all changes..."
+  git -C "$DOTFILES" add -A
+  if ! git -C "$DOTFILES" diff --staged --quiet 2>/dev/null; then
+    echo "› Committing..."
+    (cd "$DOTFILES" && ./script/suggest-commit) | (cd "$DOTFILES" && git commit -F -)
+  else
+    echo "› Nothing to commit."
+  fi
+  echo "› Pushing..."
+  git -C "$DOTFILES" push
+  exit 0
+fi
 
 if [ "$(uname -s)" = "Darwin" ]; then
   if [ ! -f /etc/sudoers.d/dotfiles-temp ]; then
@@ -27,4 +46,4 @@ brew upgrade
 
 # Install
 "$DOTFILES/script/install"
-[ "$(uname -s)" == "Darwin" ] && "$DOTFILES/macos/set-defaults.sh"
+[ "$(uname -s)" = "Darwin" ] && "$DOTFILES/macos/set-defaults.sh"

@@ -1,3 +1,4 @@
+eval "$(~/.local/bin/agent shell-integration zsh)"
 # Shortcut to this dotfiles path is $DOTFILES
 export DOTFILES=$HOME/dotfiles
 
