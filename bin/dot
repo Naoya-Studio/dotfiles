@@ -75,8 +75,8 @@ case "$1" in
   install|uninstall) exec sudo /usr/local/bin/dot-brew-install "$@" ;;
   *) exec /opt/homebrew-shared/bin/brew.real "$@" ;;
 esac
-BREWWRAP"
-  chmod 755 /opt/homebrew-shared/bin/brew'
+BREWWRAP
+chmod 755 /opt/homebrew-shared/bin/brew'
   echo "› Adding /opt/homebrew-shared/bin to PATH for all users..."
   echo '/opt/homebrew-shared/bin' | sudo tee /etc/paths.d/dot-brew-shared > /dev/null
   if [ ! -f /etc/sudoers.d/dot-brew-install ]; then
