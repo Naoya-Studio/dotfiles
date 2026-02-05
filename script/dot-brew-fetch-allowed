@@ -1,0 +1,24 @@
+#!/bin/sh
+# Fetch allowlist from GitHub. Uses API (not raw CDN) so ria etc. get live data.
+set -e
+ALLOWED_URL_FILE="${ALLOWED_URL_FILE:-/usr/local/etc/dot-brew-allowed-url}"
+if [ ! -f "$ALLOWED_URL_FILE" ]; then
+  echo "dot-brew-fetch-allowed: allowlist URL not set." >&2
+  exit 1
+fi
+url=$(cat "$ALLOWED_URL_FILE")
+# raw URL → API URL so we hit api.github.com (no CDN), Accept: raw for file body
+case "$url" in
+  https://raw.githubusercontent.com/*)
+    rest="${url#https://raw.githubusercontent.com/}"
+    user="${rest%%/*}"; rest="${rest#*/}"
+    repo="${rest%%/*}"; rest="${rest#*/}"
+    branch="${rest%%/*}"; rest="${rest#*/}"
+    path="$rest"
+    api="https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}"
+    curl -sL --connect-timeout 10 -H "Accept: application/vnd.github.raw" "$api"
+    ;;
+  *)
+    curl -sL --connect-timeout 10 "$url"
+    ;;
+esac

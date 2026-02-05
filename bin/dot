@@ -48,21 +48,16 @@ if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
     echo "$ALLOWED_URL" | sudo tee /usr/local/etc/dot-brew-allowed-url > /dev/null
     echo "› Allowlist URL saved (brew-allowed / brew install will fetch from GitHub on this Mac and others)."
   fi
-  echo "› Installing dot-brew-install, brew wrapper, brew-allowed..."
+  echo "› Installing dot-brew-install, dot-brew-fetch-allowed, brew wrapper, brew-allowed..."
   sudo cp "$DOTFILES/script/dot-brew-install" /usr/local/bin/dot-brew-install
-  sudo chmod 755 /usr/local/bin/dot-brew-install
-  # Standalone command: allowlist from URL only (no local file fallback)
+  sudo cp "$DOTFILES/script/dot-brew-fetch-allowed" /usr/local/bin/dot-brew-fetch-allowed
+  sudo chmod 755 /usr/local/bin/dot-brew-install /usr/local/bin/dot-brew-fetch-allowed
+  # Standalone command: fetch via API (no CDN), show allowlist
   sudo sh -c 'cat > /usr/local/bin/brew-allowed << "END"
 #!/bin/sh
-if [ ! -f /usr/local/etc/dot-brew-allowed-url ]; then
-  echo "Allowlist not set up. Admin run: dot shared" >&2
-  exit 1
-fi
-url=$(cat /usr/local/etc/dot-brew-allowed-url)
-case "$url" in *\?) sep="&";; *) sep="?";; esac
-content=$(curl -sL --connect-timeout 5 "${url}${sep}t=$(date +%s)" 2>/dev/null)
+content=$(/usr/local/bin/dot-brew-fetch-allowed 2>/dev/null)
 if [ -z "$content" ]; then
-  echo "Could not fetch allowlist from GitHub. Check network or run: dot shared" >&2
+  echo "Could not fetch allowlist. Check network or run: dot shared" >&2
   exit 1
 fi
 echo "Allowed (brew install for other users):"
@@ -78,15 +73,9 @@ END
 #!/bin/sh
 case "$1" in
   allowed|allowlist)
-    if [ ! -f /usr/local/etc/dot-brew-allowed-url ]; then
-      echo "Allowlist not set up. Admin run: dot shared"
-      exit 1
-    fi
-    url=$(cat /usr/local/etc/dot-brew-allowed-url)
-    case "$url" in *\?) sep="&";; *) sep="?";; esac
-    content=$(curl -sL --connect-timeout 5 "${url}${sep}t=$(date +%s)" 2>/dev/null)
+    content=$(/usr/local/bin/dot-brew-fetch-allowed 2>/dev/null)
     if [ -z "$content" ]; then
-      echo "Could not fetch allowlist from GitHub. Check network or run: dot shared" >&2
+      echo "Could not fetch allowlist. Check network or run: dot shared" >&2
       exit 1
     fi
     echo "Allowed (brew install for other users):"
