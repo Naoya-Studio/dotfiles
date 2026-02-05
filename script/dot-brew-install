@@ -3,22 +3,19 @@
 # Run via sudo from the brew wrapper. Allowlist is at /usr/local/etc/dot-brew-allowed (read-only for non-root).
 
 set -e
-ALLOWED_FILE="/usr/local/etc/dot-brew-allowed"
 ALLOWED_URL_FILE="/usr/local/etc/dot-brew-allowed-url"
 SHARED_PREFIX="/opt/homebrew-shared"
 SHARED_BREW="$SHARED_PREFIX/bin/brew.real"
 
-# Prefer allowlist from GitHub URL (so other Macs get latest without dot shared)
-allowlist_content=""
-if [ -f "$ALLOWED_URL_FILE" ]; then
-  url=$(cat "$ALLOWED_URL_FILE")
-  allowlist_content=$(curl -sL --connect-timeout 3 "$url" 2>/dev/null)
+# Allowlist from GitHub URL only (no local file)
+if [ ! -f "$ALLOWED_URL_FILE" ]; then
+  echo "dot-brew-install: allowlist URL not set. Run 'dot shared' as admin." >&2
+  exit 1
 fi
-if [ -z "$allowlist_content" ] && [ -f "$ALLOWED_FILE" ]; then
-  allowlist_content=$(cat "$ALLOWED_FILE")
-fi
+url=$(cat "$ALLOWED_URL_FILE")
+allowlist_content=$(curl -sL --connect-timeout 5 "$url" 2>/dev/null)
 if [ -z "$allowlist_content" ]; then
-  echo "dot-brew-install: allowlist not found. Run 'dot shared' as admin." >&2
+  echo "dot-brew-install: could not fetch allowlist from GitHub. Check network." >&2
   exit 1
 fi
 if [ ! -x "$SHARED_BREW" ]; then

@@ -49,24 +49,21 @@ if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
   echo "› Installing dot-brew-install, brew wrapper, brew-allowed..."
   sudo cp "$DOTFILES/script/dot-brew-install" /usr/local/bin/dot-brew-install
   sudo chmod 755 /usr/local/bin/dot-brew-install
-  # Standalone command: fetch allowlist from URL (so other Macs get latest) or fall back to local file
+  # Standalone command: allowlist from URL only (no local file fallback)
   sudo sh -c 'cat > /usr/local/bin/brew-allowed << "END"
 #!/bin/sh
-content=""
-if [ -f /usr/local/etc/dot-brew-allowed-url ]; then
-  url=$(cat /usr/local/etc/dot-brew-allowed-url)
-  content=$(curl -sL --connect-timeout 3 "$url" 2>/dev/null)
-fi
-if [ -z "$content" ] && [ -f /usr/local/etc/dot-brew-allowed ]; then
-  content=$(cat /usr/local/etc/dot-brew-allowed)
-fi
-if [ -n "$content" ]; then
-  echo "Allowed (brew install for other users):"
-  echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
-else
+if [ ! -f /usr/local/etc/dot-brew-allowed-url ]; then
   echo "Allowlist not set up. Admin run: dot shared" >&2
   exit 1
 fi
+url=$(cat /usr/local/etc/dot-brew-allowed-url)
+content=$(curl -sL --connect-timeout 5 "$url" 2>/dev/null)
+if [ -z "$content" ]; then
+  echo "Could not fetch allowlist from GitHub. Check network or run: dot shared" >&2
+  exit 1
+fi
+echo "Allowed (brew install for other users):"
+echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
 END
   chmod 755 /usr/local/bin/brew-allowed'
   # Wrap /opt/homebrew-shared/bin/brew so "brew allowed" and allowlisted "brew install" work (PATH has this dir)
@@ -78,20 +75,18 @@ END
 #!/bin/sh
 case "$1" in
   allowed|allowlist)
-    content=""
-    if [ -f /usr/local/etc/dot-brew-allowed-url ]; then
-      url=$(cat /usr/local/etc/dot-brew-allowed-url)
-      content=$(curl -sL --connect-timeout 3 "$url" 2>/dev/null)
-    fi
-    if [ -z "$content" ] && [ -f /usr/local/etc/dot-brew-allowed ]; then
-      content=$(cat /usr/local/etc/dot-brew-allowed)
-    fi
-    if [ -n "$content" ]; then
-      echo "Allowed (brew install for other users):"
-      echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
-    else
+    if [ ! -f /usr/local/etc/dot-brew-allowed-url ]; then
       echo "Allowlist not set up. Admin run: dot shared"
+      exit 1
     fi
+    url=$(cat /usr/local/etc/dot-brew-allowed-url)
+    content=$(curl -sL --connect-timeout 5 "$url" 2>/dev/null)
+    if [ -z "$content" ]; then
+      echo "Could not fetch allowlist from GitHub. Check network or run: dot shared" >&2
+      exit 1
+    fi
+    echo "Allowed (brew install for other users):"
+    echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
     ;;
   install|uninstall) exec sudo /usr/local/bin/dot-brew-install "$@" ;;
   *) exec /opt/homebrew-shared/bin/brew.real "$@" ;;
