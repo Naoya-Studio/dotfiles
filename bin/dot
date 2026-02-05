@@ -102,6 +102,11 @@ chmod 755 /opt/homebrew-shared/bin/brew'
     echo 'ALL ALL=(ALL) NOPASSWD: /usr/local/bin/dot-brew-install *' | sudo tee /etc/sudoers.d/dot-brew-install > /dev/null
     sudo chmod 440 /etc/sudoers.d/dot-brew-install
   fi
+  if [ ! -f /etc/sudoers.d/dot-brew-cask-copy ]; then
+    echo "› Allowing passwordless copy from Caskroom to /Applications (for Cask installs by non-admin users)..."
+    echo 'ALL ALL=(ALL) NOPASSWD: /bin/cp -pR /opt/homebrew-shared/Caskroom/*/*/* /Applications/*' | sudo tee /etc/sudoers.d/dot-brew-cask-copy > /dev/null
+    sudo chmod 440 /etc/sudoers.d/dot-brew-cask-copy
+  fi
   echo "Done. Allowlist is fetched from GitHub when users run brew-allowed / brew install (no pull needed on other Macs)."
   exit 0
 fi
