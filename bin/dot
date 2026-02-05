@@ -59,7 +59,8 @@ if [ ! -f /usr/local/etc/dot-brew-allowed-url ]; then
   exit 1
 fi
 url=$(cat /usr/local/etc/dot-brew-allowed-url)
-content=$(curl -sL --connect-timeout 5 "$url" 2>/dev/null)
+case "$url" in *\?) sep="&";; *) sep="?";; esac
+content=$(curl -sL --connect-timeout 5 "${url}${sep}t=$(date +%s)" 2>/dev/null)
 if [ -z "$content" ]; then
   echo "Could not fetch allowlist from GitHub. Check network or run: dot shared" >&2
   exit 1
@@ -82,7 +83,8 @@ case "$1" in
       exit 1
     fi
     url=$(cat /usr/local/etc/dot-brew-allowed-url)
-    content=$(curl -sL --connect-timeout 5 "$url" 2>/dev/null)
+    case "$url" in *\?) sep="&";; *) sep="?";; esac
+    content=$(curl -sL --connect-timeout 5 "${url}${sep}t=$(date +%s)" 2>/dev/null)
     if [ -z "$content" ]; then
       echo "Could not fetch allowlist from GitHub. Check network or run: dot shared" >&2
       exit 1

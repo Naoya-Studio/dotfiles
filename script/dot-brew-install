@@ -13,7 +13,9 @@ if [ ! -f "$ALLOWED_URL_FILE" ]; then
   exit 1
 fi
 url=$(cat "$ALLOWED_URL_FILE")
-allowlist_content=$(curl -sL --connect-timeout 5 "$url" 2>/dev/null)
+# Append cache-buster so other Macs see latest allowlist after dot update + push
+case "$url" in *\?) sep="&";; *) sep="?";; esac
+allowlist_content=$(curl -sL --connect-timeout 5 "${url}${sep}t=$(date +%s)" 2>/dev/null)
 if [ -z "$allowlist_content" ]; then
   echo "dot-brew-install: could not fetch allowlist from GitHub. Check network." >&2
   exit 1
