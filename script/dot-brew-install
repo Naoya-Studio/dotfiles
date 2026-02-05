@@ -45,27 +45,31 @@ fi
 
 # Parse install/uninstall args: [--cask] pkg1 [pkg2 ...]
 pkgs=()
-use_cask=false
+force_cask=false
 while [ $# -gt 0 ]; do
   case "$1" in
-    --cask) use_cask=true ;;
+    --cask) force_cask=true ;;
     *)      pkgs+=("$1") ;;
   esac
   shift
 done
 
-allowed_list=("${allowed_formulae[@]}")
-[ "$use_cask" = true ] && allowed_list=("${allowed_casks[@]}")
-
+# Each pkg: allow if in formulae or casks; decide formula vs cask from allowlist (so "brew install google-chrome@beta" works without --cask)
+formula_pkgs=()
+cask_pkgs=()
 for pkg in "${pkgs[@]}"; do
-  found=false
-  for a in "${allowed_list[@]}"; do
-    if [ "$pkg" = "$a" ]; then
-      found=true
-      break
-    fi
-  done
-  if [ "$found" != true ]; then
+  in_formulae=false
+  in_casks=false
+  for a in "${allowed_formulae[@]}"; do [ "$pkg" = "$a" ] && in_formulae=true; done
+  for a in "${allowed_casks[@]}"; do [ "$pkg" = "$a" ] && in_casks=true; done
+  if [ "$force_cask" = true ]; then
+    in_formulae=false
+  fi
+  if [ "$in_casks" = true ]; then
+    cask_pkgs+=("$pkg")
+  elif [ "$in_formulae" = true ]; then
+    formula_pkgs+=("$pkg")
+  else
     echo "dot-brew-install: '$pkg' is not in the allowlist. Only admin can add entries." >&2
     exit 1
   fi
@@ -73,16 +77,12 @@ done
 
 export HOMEBREW_PREFIX="$SHARED_PREFIX"
 export HOMEBREW_REPOSITORY="$SHARED_PREFIX"
+failed=0
 if [ "$subcmd" = "install" ]; then
-  if [ "$use_cask" = true ]; then
-    exec "$SHARED_BREW" install --cask "${pkgs[@]}"
-  else
-    exec "$SHARED_BREW" install "${pkgs[@]}"
-  fi
+  [ ${#formula_pkgs[@]} -gt 0 ] && "$SHARED_BREW" install "${formula_pkgs[@]}" || failed=1
+  [ ${#cask_pkgs[@]} -gt 0 ] && "$SHARED_BREW" install --cask "${cask_pkgs[@]}" || failed=1
 else
-  if [ "$use_cask" = true ]; then
-    exec "$SHARED_BREW" uninstall --cask "${pkgs[@]}"
-  else
-    exec "$SHARED_BREW" uninstall "${pkgs[@]}"
-  fi
+  [ ${#formula_pkgs[@]} -gt 0 ] && "$SHARED_BREW" uninstall "${formula_pkgs[@]}" || failed=1
+  [ ${#cask_pkgs[@]} -gt 0 ] && "$SHARED_BREW" uninstall --cask "${cask_pkgs[@]}" || failed=1
 fi
+exit $failed
