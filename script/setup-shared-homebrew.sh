@@ -19,9 +19,18 @@ if [ ! -d "$SHARED_PREFIX" ]; then
 fi
 
 if [ ! -x "$SHARED_PREFIX/bin/brew" ]; then
-  echo "Installing Homebrew into $SHARED_PREFIX (manual clone; install.sh ignores custom prefix on macOS)..."
-  git clone https://github.com/Homebrew/brew "$SHARED_PREFIX"
-  "$SHARED_PREFIX/bin/brew" update --force
+  if [ -d "$SHARED_PREFIX/.git" ]; then
+    echo "Completing existing clone in $SHARED_PREFIX..."
+    (cd "$SHARED_PREFIX" && git fetch origin && git reset --hard origin/HEAD)
+    [ -x "$SHARED_PREFIX/bin/brew" ] && "$SHARED_PREFIX/bin/brew" update --force
+  else
+    echo "Installing Homebrew into $SHARED_PREFIX (manual clone)..."
+    sudo rm -rf "$SHARED_PREFIX"
+    sudo mkdir -p "$SHARED_PREFIX"
+    sudo chown "$RUN_USER:staff" "$SHARED_PREFIX"
+    git clone https://github.com/Homebrew/brew "$SHARED_PREFIX"
+    "$SHARED_PREFIX/bin/brew" update --force
+  fi
 fi
 
 if [ ! -x "$SHARED_PREFIX/bin/brew" ]; then
