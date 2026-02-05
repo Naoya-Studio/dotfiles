@@ -38,6 +38,7 @@ done <<< "$allowlist_content"
 
 subcmd="$1"
 shift || true
+RUN_USER="${SUDO_USER:-$USER}"
 if [ "$subcmd" != "install" ] && [ "$subcmd" != "uninstall" ]; then
   exec "$SHARED_BREW" "$subcmd" "$@"
 fi
@@ -53,7 +54,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-# Each pkg: allow if in formulae or casks; decide formula vs cask from allowlist (so "brew install google-chrome@beta" works without --cask)
+# Install: only allowlisted. Uninstall: allowlisted OR currently installed (so users can remove apps even if removed from allowlist).
 formula_pkgs=()
 cask_pkgs=()
 for pkg in "${pkgs[@]}"; do
@@ -64,18 +65,34 @@ for pkg in "${pkgs[@]}"; do
   if [ "$force_cask" = true ]; then
     in_formulae=false
   fi
+  if [ "$subcmd" = "uninstall" ]; then
+    # Uninstall: allow if on allowlist, or if installed in shared prefix (brew list / list --cask)
+    if [ "$in_casks" = true ] || [ "$in_formulae" = true ]; then
+      :
+    else
+      if sudo -u "$RUN_USER" env HOMEBREW_PREFIX="$SHARED_PREFIX" HOMEBREW_REPOSITORY="$SHARED_PREFIX" "$SHARED_BREW" list --cask 2>/dev/null | grep -Fxq "$pkg"; then
+        in_casks=true
+      elif sudo -u "$RUN_USER" env HOMEBREW_PREFIX="$SHARED_PREFIX" HOMEBREW_REPOSITORY="$SHARED_PREFIX" "$SHARED_BREW" list 2>/dev/null | grep -Fxq "$pkg"; then
+        in_formulae=true
+      else
+        echo "dot-brew-install: '$pkg' is not installed (or not in allowlist)." >&2
+        exit 1
+      fi
+    fi
+  else
+    if [ "$in_casks" = false ] && [ "$in_formulae" = false ]; then
+      echo "dot-brew-install: '$pkg' is not in the allowlist. Only admin can add entries." >&2
+      exit 1
+    fi
+  fi
   if [ "$in_casks" = true ]; then
     cask_pkgs+=("$pkg")
   elif [ "$in_formulae" = true ]; then
     formula_pkgs+=("$pkg")
-  else
-    echo "dot-brew-install: '$pkg' is not in the allowlist. Only admin can add entries." >&2
-    exit 1
   fi
 done
 
 # Homebrew must not run as root; run as the user who invoked sudo
-RUN_USER="${SUDO_USER:-$USER}"
 run_brew() {
   sudo -u "$RUN_USER" env HOMEBREW_PREFIX="$SHARED_PREFIX" HOMEBREW_REPOSITORY="$SHARED_PREFIX" "$SHARED_BREW" "$@"
 }
