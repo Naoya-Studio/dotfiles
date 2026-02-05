@@ -12,19 +12,28 @@ echo "› Resetting Dock..."
 dockutil --remove all --no-restart 2>/dev/null || true
 
 # Add in order (skip if app not installed). Finder is always in Dock.
+# Music: try System path first (Apple Silicon / recent macOS), then /Applications — add only one
+music_added=""
 for app in \
   "/Applications/Dia.app" \
   "/Applications/Safari.app" \
   "/Applications/Messages.app" \
+  "/System/Applications/Music.app" \
   "/Applications/Music.app" \
   "/Applications/Vesktop.app" \
   "/Applications/Slack.app" \
   "/Applications/Spark.app" \
   "/Applications/LINE.app"
 do
-  if [ -d "$app" ]; then
-    dockutil --add "$app" --no-restart 2>/dev/null || true
-  fi
+  case "$app" in
+    /System/Applications/Music.app|/Applications/Music.app)
+      [ -n "$music_added" ] && continue
+      [ -d "$app" ] && dockutil --add "$app" --no-restart 2>/dev/null && music_added=1
+      ;;
+    *)
+      [ -d "$app" ] && dockutil --add "$app" --no-restart 2>/dev/null || true
+      ;;
+  esac
 done
 
 killall Dock 2>/dev/null || true
