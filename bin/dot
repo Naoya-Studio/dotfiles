@@ -162,4 +162,7 @@ brew upgrade
 
 # Install
 "$DOTFILES/script/install"
-[ "$(uname -s)" = "Darwin" ] && "$DOTFILES/macos/set-defaults.sh"
+if [ "$(uname -s)" = "Darwin" ]; then
+  "$DOTFILES/macos/set-defaults.sh"
+  "$DOTFILES/macos/set-dock.sh"
+fi
