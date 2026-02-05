@@ -164,5 +164,5 @@ brew upgrade
 "$DOTFILES/script/install"
 if [ "$(uname -s)" = "Darwin" ]; then
   "$DOTFILES/macos/set-defaults.sh"
-  "$DOTFILES/macos/set-dock.sh"
+  [ -f "$DOTFILES/macos/set-dock.sh" ] && chmod +x "$DOTFILES/macos/set-dock.sh" && "$DOTFILES/macos/set-dock.sh"
 fi
