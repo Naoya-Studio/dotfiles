@@ -2,6 +2,7 @@
 # Reset Dock and set apps: Finder, dia, Safari, Messages, Music, Vesktop, Slack, Spark, LINE.
 # Run after brew bundle (dockutil must be installed). Requires logout/restart to take effect if Dock was not running.
 
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 if ! command -v dockutil >/dev/null 2>&1; then
   echo "› dockutil not found, skipping Dock setup (run: brew bundle)"
   exit 0
