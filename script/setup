@@ -223,6 +223,10 @@ run_mode() {
       echo "Cloning dotfiles..."
       git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
     fi
+    # Use SSH for push (no password prompt) and add github.com to known_hosts (no "yes" prompt)
+    git -C "$DOTFILES_DIR" remote set-url origin git@github.com:Naoya-Studio/dotfiles.git
+    mkdir -p "$HOME/.ssh"
+    ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
     export PATH="$DOTFILES_DIR/bin:$PATH"
   fi
 

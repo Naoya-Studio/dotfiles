@@ -3,9 +3,19 @@
 # dot - management script
 #   dot              — update everything (pull, brew, install)
 #   dot --update     — sync current state to GitHub (Brewfile + all changes, commit & push)
+#   dot pull         — force pull (discard local changes, match remote)
 
 set -e
 DOTFILES=$HOME/dotfiles
+
+# --- dot pull: force pull (discard local, match remote) ---
+if [ "$1" = "--pull" ] || [ "$1" = "pull" ]; then
+  echo "› Force pull (discard local changes)..."
+  branch=$(git -C "$DOTFILES" branch --show-current)
+  git -C "$DOTFILES" fetch origin
+  git -C "$DOTFILES" reset --hard "origin/$branch"
+  exit 0
+fi
 
 # --- dot --update: sync to GitHub (Brewfile + all changes, commit & push) ---
 if [ "$1" = "--update" ] || [ "$1" = "update" ]; then
