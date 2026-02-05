@@ -116,6 +116,14 @@ if [ "$1" = "--update" ] || [ "$1" = "update" ]; then
   exit 0
 fi
 
+# Unknown subcommand: don't run full dot, error instead
+if [ -n "$1" ]; then
+  echo "Unknown command: $1" >&2
+  echo "Usage: dot [update|pull|shared]" >&2
+  echo "  dot shared add/remove/list — allowlist for other users" >&2
+  exit 1
+fi
+
 if [ "$(uname -s)" = "Darwin" ]; then
   if [ ! -f /etc/sudoers.d/dotfiles-temp ]; then
     echo "› Setting temporary passwordless sudo"
