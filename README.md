@@ -51,10 +51,16 @@ Examples: `... --github --homebrew` (run both); `... --alfred --macos` (clone th
 dot
 ```
 
-**Sync current state to GitHub** (Brewfile + all changes, commit & push):
+**Sync current state to GitHub** (Brewfile + all changes, commit & push; pulls remote first):
 
 ```sh
-dot --update
+dot update
+```
+
+**Force pull** (discard local changes, match remote):
+
+```sh
+dot pull
 ```
 
 **Install from Brewfile:**
