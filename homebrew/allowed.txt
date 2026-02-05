@@ -7,4 +7,3 @@
 # brew python@3.12
 # cask google-chrome
 cask google-chrome
-cask google-chrome@beta
