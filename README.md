@@ -70,7 +70,7 @@ dot shared
 ```
 
 - **Add/remove:** `dot shared add 1password` (checks with `brew info` and adds formula or cask), `dot shared add --cask` / `--formula` to force type, `dot shared remove <name>`, `dot shared list`. Then run `dot shared` to deploy. The deployed allowlist is read-only (chmod 444).
-- **Check:** `brew allowed` (any user) shows what’s allowed. Other users run `brew install <name>`; only allowlisted names succeed. Installs go to `/opt/homebrew-shared`.
+- **Check:** `brew-allowed` (all users; in `/usr/local/bin`) shows what’s allowed. Other users run `brew install <name>`; only allowlisted names succeed. Installs go to `/opt/homebrew-shared`.
 
 **Install from Brewfile:**
 
