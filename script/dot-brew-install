@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install only allowlisted formulae/casks into /opt/homebrew-shared.
-# Run via sudo from the brew wrapper. Allowlist is at /usr/local/etc/dot-brew-allowed (read-only for non-root).
+# Run via sudo from the brew wrapper. Allowlist is fetched from URL in /usr/local/etc/dot-brew-allowed-url.
 
 set -e
 ALLOWED_URL_FILE="/usr/local/etc/dot-brew-allowed-url"

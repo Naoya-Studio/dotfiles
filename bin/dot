@@ -37,10 +37,9 @@ if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
   esac
   echo "› Setting up shared Homebrew..."
   bash "$DOTFILES/script/setup-shared-homebrew.sh"
-  echo "› Installing allowlist (read-only for other users)..."
+  echo "› Installing allowlist URL (brew-allowed / brew install fetch from GitHub)..."
   sudo mkdir -p /usr/local/etc
-  sudo cp "$ALLOWED" /usr/local/etc/dot-brew-allowed
-  sudo chmod 444 /usr/local/etc/dot-brew-allowed
+  sudo rm -f /usr/local/etc/dot-brew-allowed
   ALLOWED_URL=$(DOTFILES="$DOTFILES" bash "$DOTFILES/script/get-allowed-url.sh" 2>/dev/null) || true
   if [ -n "$ALLOWED_URL" ]; then
     echo "$ALLOWED_URL" | sudo tee /usr/local/etc/dot-brew-allowed-url > /dev/null
