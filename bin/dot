@@ -41,15 +41,28 @@ if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
   sudo mkdir -p /usr/local/etc
   sudo cp "$ALLOWED" /usr/local/etc/dot-brew-allowed
   sudo chmod 444 /usr/local/etc/dot-brew-allowed
+  ALLOWED_URL=$(DOTFILES="$DOTFILES" bash "$DOTFILES/script/get-allowed-url.sh" 2>/dev/null) || true
+  if [ -n "$ALLOWED_URL" ]; then
+    echo "$ALLOWED_URL" | sudo tee /usr/local/etc/dot-brew-allowed-url > /dev/null
+    echo "› Allowlist URL saved (brew-allowed / brew install will fetch from GitHub on this Mac and others)."
+  fi
   echo "› Installing dot-brew-install, brew wrapper, brew-allowed..."
   sudo cp "$DOTFILES/script/dot-brew-install" /usr/local/bin/dot-brew-install
   sudo chmod 755 /usr/local/bin/dot-brew-install
-  # Standalone command so anyone (admin or normal user) can run: brew-allowed
+  # Standalone command: fetch allowlist from URL (so other Macs get latest) or fall back to local file
   sudo sh -c 'cat > /usr/local/bin/brew-allowed << "END"
 #!/bin/sh
-if [ -f /usr/local/etc/dot-brew-allowed ]; then
+content=""
+if [ -f /usr/local/etc/dot-brew-allowed-url ]; then
+  url=$(cat /usr/local/etc/dot-brew-allowed-url)
+  content=$(curl -sL --connect-timeout 3 "$url" 2>/dev/null)
+fi
+if [ -z "$content" ] && [ -f /usr/local/etc/dot-brew-allowed ]; then
+  content=$(cat /usr/local/etc/dot-brew-allowed)
+fi
+if [ -n "$content" ]; then
   echo "Allowed (brew install for other users):"
-  grep -v "^#" /usr/local/etc/dot-brew-allowed | grep -v "^[[:space:]]*$" | sed "s/^/  /"
+  echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
 else
   echo "Allowlist not set up. Admin run: dot shared" >&2
   exit 1
@@ -65,9 +78,17 @@ END
 #!/bin/sh
 case "$1" in
   allowed|allowlist)
-    if [ -f /usr/local/etc/dot-brew-allowed ]; then
+    content=""
+    if [ -f /usr/local/etc/dot-brew-allowed-url ]; then
+      url=$(cat /usr/local/etc/dot-brew-allowed-url)
+      content=$(curl -sL --connect-timeout 3 "$url" 2>/dev/null)
+    fi
+    if [ -z "$content" ] && [ -f /usr/local/etc/dot-brew-allowed ]; then
+      content=$(cat /usr/local/etc/dot-brew-allowed)
+    fi
+    if [ -n "$content" ]; then
       echo "Allowed (brew install for other users):"
-      grep -v "^#" /usr/local/etc/dot-brew-allowed | grep -v "^[[:space:]]*$" | sed "s/^/  /"
+      echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
     else
       echo "Allowlist not set up. Admin run: dot shared"
     fi
@@ -84,7 +105,7 @@ chmod 755 /opt/homebrew-shared/bin/brew'
     echo 'ALL ALL=(ALL) NOPASSWD: /usr/local/bin/dot-brew-install *' | sudo tee /etc/sudoers.d/dot-brew-install > /dev/null
     sudo chmod 440 /etc/sudoers.d/dot-brew-install
   fi
-  echo "Done. To see allowlist: brew-allowed (all users). To install: brew install <name> (only allowlisted). Update via dot shared."
+  echo "Done. Allowlist is fetched from GitHub when users run brew-allowed / brew install (no pull needed on other Macs)."
   exit 0
 fi
 
