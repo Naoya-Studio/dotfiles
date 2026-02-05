@@ -5,7 +5,7 @@
 set -e
 ALLOWED_FILE="/usr/local/etc/dot-brew-allowed"
 SHARED_PREFIX="/opt/homebrew-shared"
-SHARED_BREW="$SHARED_PREFIX/bin/brew"
+SHARED_BREW="$SHARED_PREFIX/bin/brew.real"
 
 if [ ! -f "$ALLOWED_FILE" ]; then
   echo "dot-brew-install: allowlist not found. Run 'dot shared' as admin." >&2

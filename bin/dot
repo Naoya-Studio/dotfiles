@@ -44,7 +44,12 @@ if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
   echo "› Installing dot-brew-install and brew wrapper..."
   sudo cp "$DOTFILES/script/dot-brew-install" /usr/local/bin/dot-brew-install
   sudo chmod 755 /usr/local/bin/dot-brew-install
-  sudo sh -c 'cat > /usr/local/bin/brew << "BREWWRAP"
+  # Wrap /opt/homebrew-shared/bin/brew so "brew allowed" and allowlisted "brew install" work (PATH has this dir)
+  SHARED_PREFIX="/opt/homebrew-shared"
+  if [ ! -x "$SHARED_PREFIX/bin/brew.real" ]; then
+    sudo mv "$SHARED_PREFIX/bin/brew" "$SHARED_PREFIX/bin/brew.real"
+  fi
+  sudo sh -c 'cat > /opt/homebrew-shared/bin/brew << "BREWWRAP"
 #!/bin/sh
 case "$1" in
   allowed|allowlist)
@@ -56,10 +61,10 @@ case "$1" in
     fi
     ;;
   install|uninstall) exec sudo /usr/local/bin/dot-brew-install "$@" ;;
-  *) exec /opt/homebrew-shared/bin/brew "$@" ;;
+  *) exec /opt/homebrew-shared/bin/brew.real "$@" ;;
 esac
 BREWWRAP"
-  chmod 755 /usr/local/bin/brew'
+  chmod 755 /opt/homebrew-shared/bin/brew'
   echo "› Adding /opt/homebrew-shared/bin to PATH for all users..."
   echo '/opt/homebrew-shared/bin' | sudo tee /etc/paths.d/dot-brew-shared > /dev/null
   if [ ! -f /etc/sudoers.d/dot-brew-install ]; then
