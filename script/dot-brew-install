@@ -75,14 +75,17 @@ for pkg in "${pkgs[@]}"; do
   fi
 done
 
-export HOMEBREW_PREFIX="$SHARED_PREFIX"
-export HOMEBREW_REPOSITORY="$SHARED_PREFIX"
+# Homebrew must not run as root; run as the user who invoked sudo
+RUN_USER="${SUDO_USER:-$USER}"
+run_brew() {
+  sudo -u "$RUN_USER" env HOMEBREW_PREFIX="$SHARED_PREFIX" HOMEBREW_REPOSITORY="$SHARED_PREFIX" "$SHARED_BREW" "$@"
+}
 failed=0
 if [ "$subcmd" = "install" ]; then
-  [ ${#formula_pkgs[@]} -gt 0 ] && "$SHARED_BREW" install "${formula_pkgs[@]}" || failed=1
-  [ ${#cask_pkgs[@]} -gt 0 ] && "$SHARED_BREW" install --cask "${cask_pkgs[@]}" || failed=1
+  [ ${#formula_pkgs[@]} -gt 0 ] && run_brew install "${formula_pkgs[@]}" || failed=1
+  [ ${#cask_pkgs[@]} -gt 0 ] && run_brew install --cask "${cask_pkgs[@]}" || failed=1
 else
-  [ ${#formula_pkgs[@]} -gt 0 ] && "$SHARED_BREW" uninstall "${formula_pkgs[@]}" || failed=1
-  [ ${#cask_pkgs[@]} -gt 0 ] && "$SHARED_BREW" uninstall --cask "${cask_pkgs[@]}" || failed=1
+  [ ${#formula_pkgs[@]} -gt 0 ] && run_brew uninstall "${formula_pkgs[@]}" || failed=1
+  [ ${#cask_pkgs[@]} -gt 0 ] && run_brew uninstall --cask "${cask_pkgs[@]}" || failed=1
 fi
 exit $failed
