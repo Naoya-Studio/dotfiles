@@ -5,10 +5,15 @@ DOTFILES="${DOTFILES:-$HOME/dotfiles}"
 cd "$DOTFILES"
 branch=$(git branch --show-current)
 remote=$(git remote get-url origin)
-if [[ "$remote" =~ git@github.com:([^/]+)/([^/]+?)(\.git)?$ ]]; then
-  echo "https://raw.githubusercontent.com/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/$branch/homebrew/allowed.txt"
-elif [[ "$remote" =~ https://github.com/([^/]+)/([^/]+?)(\.git)?$ ]]; then
-  echo "https://raw.githubusercontent.com/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/$branch/homebrew/allowed.txt"
-else
-  exit 1
+# git@github.com:user/repo.git or https://github.com/user/repo[.git]
+url=""
+if [[ "$remote" == git@github.com:* ]]; then
+  user=$(echo "$remote" | sed -n 's|git@github.com:\([^/]*\)/.*|\1|p')
+  repo=$(echo "$remote" | sed 's|\.git$||' | sed -n 's|.*/||p')
+  url="https://raw.githubusercontent.com/$user/$repo/$branch/homebrew/allowed.txt"
+elif [[ "$remote" == https://github.com/* ]]; then
+  user=$(echo "$remote" | sed -n 's|https://github.com/\([^/]*\)/.*|\1|p')
+  repo=$(echo "$remote" | sed 's|\.git$||' | sed -n 's|.*/||p')
+  url="https://raw.githubusercontent.com/$user/$repo/$branch/homebrew/allowed.txt"
 fi
+[ -n "$url" ] && echo "$url" || exit 1
