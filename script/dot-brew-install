@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# Install only allowlisted formulae/casks into /opt/homebrew-shared.
+# Run via sudo from the brew wrapper. Allowlist is at /usr/local/etc/dot-brew-allowed (read-only for non-root).
+
+set -e
+ALLOWED_FILE="/usr/local/etc/dot-brew-allowed"
+SHARED_PREFIX="/opt/homebrew-shared"
+SHARED_BREW="$SHARED_PREFIX/bin/brew"
+
+if [ ! -f "$ALLOWED_FILE" ]; then
+  echo "dot-brew-install: allowlist not found. Run 'dot shared' as admin." >&2
+  exit 1
+fi
+if [ ! -x "$SHARED_BREW" ]; then
+  echo "dot-brew-install: shared Homebrew not found at $SHARED_PREFIX. Run 'dot shared' as admin." >&2
+  exit 1
+fi
+
+# Parse allowlist: "brew <name>" and "cask <name>"; skip comments and empty lines.
+allowed_formulae=()
+allowed_casks=()
+while IFS= read -r line; do
+  line="${line%%#*}"
+  line="$(echo "$line" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  [ -z "$line" ] && continue
+  if [[ "$line" == "brew "* ]]; then
+    allowed_formulae+=("${line#brew }")
+  elif [[ "$line" == "cask "* ]]; then
+    allowed_casks+=("${line#cask }")
+  fi
+done < "$ALLOWED_FILE"
+
+subcmd="$1"
+shift || true
+if [ "$subcmd" != "install" ] && [ "$subcmd" != "uninstall" ]; then
+  exec "$SHARED_BREW" "$subcmd" "$@"
+fi
+
+# Parse install/uninstall args: [--cask] pkg1 [pkg2 ...]
+pkgs=()
+use_cask=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --cask) use_cask=true ;;
+    *)      pkgs+=("$1") ;;
+  esac
+  shift
+done
+
+allowed_list=("${allowed_formulae[@]}")
+[ "$use_cask" = true ] && allowed_list=("${allowed_casks[@]}")
+
+for pkg in "${pkgs[@]}"; do
+  found=false
+  for a in "${allowed_list[@]}"; do
+    if [ "$pkg" = "$a" ]; then
+      found=true
+      break
+    fi
+  done
+  if [ "$found" != true ]; then
+    echo "dot-brew-install: '$pkg' is not in the allowlist. Only admin can add entries." >&2
+    exit 1
+  fi
+done
+
+export HOMEBREW_PREFIX="$SHARED_PREFIX"
+export HOMEBREW_REPOSITORY="$SHARED_PREFIX"
+if [ "$subcmd" = "install" ]; then
+  if [ "$use_cask" = true ]; then
+    exec "$SHARED_BREW" install --cask "${pkgs[@]}"
+  else
+    exec "$SHARED_BREW" install "${pkgs[@]}"
+  fi
+else
+  if [ "$use_cask" = true ]; then
+    exec "$SHARED_BREW" uninstall --cask "${pkgs[@]}"
+  else
+    exec "$SHARED_BREW" uninstall "${pkgs[@]}"
+  fi
+fi

@@ -63,6 +63,15 @@ dot update
 dot pull
 ```
 
+**Allow other Mac users to brew install** (allowlist only; your Brewfile stays yours). Run once as admin (uses sudo):
+
+```sh
+dot shared
+```
+
+- **Add/remove:** `dot shared add 1password` (checks with `brew info` and adds formula or cask), `dot shared add --cask` / `--formula` to force type, `dot shared remove <name>`, `dot shared list`. Then run `dot shared` to deploy. The deployed allowlist is read-only (chmod 444).
+- **Check:** `brew allowed` (any user) shows what’s allowed. Other users run `brew install <name>`; only allowlisted names succeed. Installs go to `/opt/homebrew-shared`.
+
 **Install from Brewfile:**
 
 ```sh
@@ -91,14 +100,16 @@ dot --edit
 
 ```
 dotfiles/
-├── bin/dot              # dot, dot --update, dot --edit
+├── bin/dot              # dot, dot update, dot pull, dot shared
 ├── script/
 │   ├── setup            # One-liner entry (full / core)
 │   ├── install-homebrew-only
 │   ├── bootstrap        # Symlinks + dot
 │   ├── install          # All install.sh + brew bundle + set-defaults
-│   └── suggest-commit   # Used by dot --update for commit message
-├── homebrew/            # Homebrew install, autoupdate
+│   ├── suggest-commit   # Used by dot update for commit message
+│   ├── dot-brew-install # Allowlist check + install to /opt/homebrew-shared
+│   └── setup-shared-homebrew.sh  # One-time: create shared Homebrew prefix
+├── homebrew/            # Homebrew install, autoupdate, allowed.txt (allowlist for dot shared)
 ├── macos/               # set-defaults (Touch ID, Finder, etc.)
 ├── alfred/              # Alfred prefs + install
 ├── git/, github/        # Git & gh config

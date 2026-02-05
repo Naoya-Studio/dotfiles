@@ -4,11 +4,69 @@
 #   dot              — update everything (pull, brew, install)
 #   dot --update     — sync current state to GitHub (Brewfile + all changes, commit & push)
 #   dot pull         — force pull (discard local changes, match remote)
+#   dot shared       — allow other users to brew install allowlisted packages (needs sudo)
 
 set -e
 DOTFILES=$HOME/dotfiles
 
-# --- dot pull: force pull (discard local, match remote) ---
+# --- dot shared: allowlist brew for other users (read-only allowlist, shared prefix) ---
+if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
+  [ "$(uname -s)" != "Darwin" ] && echo "dot shared is for macOS only." && exit 1
+  ALLOWED="$DOTFILES/homebrew/allowed.txt"
+  [ ! -f "$ALLOWED" ] && echo "Missing $ALLOWED" && exit 1
+  # add / remove / list: only owner of allowlist can add/remove; list is read-only
+  case "${2:-}" in
+    add|remove)
+      owner=$(stat -f '%Su' "$ALLOWED" 2>/dev/null || true)
+      if [ -z "$owner" ] || [ "$owner" != "$USER" ]; then
+        echo "Only the owner of $ALLOWED can run: dot shared add/remove" >&2
+        exit 1
+      fi
+      DOTFILES="$DOTFILES" bash "$DOTFILES/script/shared-allowlist.sh" "$2" "$3" "$4" "$5"
+      exit 0
+      ;;
+    list)
+      DOTFILES="$DOTFILES" bash "$DOTFILES/script/shared-allowlist.sh" "$2" "$3" "$4" "$5"
+      exit 0
+      ;;
+  esac
+  echo "› Setting up shared Homebrew..."
+  bash "$DOTFILES/script/setup-shared-homebrew.sh"
+  echo "› Installing allowlist (read-only for other users)..."
+  sudo mkdir -p /usr/local/etc
+  sudo cp "$ALLOWED" /usr/local/etc/dot-brew-allowed
+  sudo chmod 444 /usr/local/etc/dot-brew-allowed
+  echo "› Installing dot-brew-install and brew wrapper..."
+  sudo cp "$DOTFILES/script/dot-brew-install" /usr/local/bin/dot-brew-install
+  sudo chmod 755 /usr/local/bin/dot-brew-install
+  sudo sh -c 'cat > /usr/local/bin/brew << "BREWWRAP"
+#!/bin/sh
+case "$1" in
+  allowed|allowlist)
+    if [ -f /usr/local/etc/dot-brew-allowed ]; then
+      echo "Allowed (brew install for other users):"
+      grep -v "^#" /usr/local/etc/dot-brew-allowed | grep -v "^[[:space:]]*$" | sed "s/^/  /"
+    else
+      echo "Allowlist not set up. Admin run: dot shared"
+    fi
+    ;;
+  install|uninstall) exec sudo /usr/local/bin/dot-brew-install "$@" ;;
+  *) exec /opt/homebrew-shared/bin/brew "$@" ;;
+esac
+BREWWRAP"
+  chmod 755 /usr/local/bin/brew'
+  echo "› Adding /opt/homebrew-shared/bin to PATH for all users..."
+  echo '/opt/homebrew-shared/bin' | sudo tee /etc/paths.d/dot-brew-shared > /dev/null
+  if [ ! -f /etc/sudoers.d/dot-brew-install ]; then
+    echo "› Allowing passwordless dot-brew-install for allowlisted installs..."
+    echo 'ALL ALL=(ALL) NOPASSWD: /usr/local/bin/dot-brew-install *' | sudo tee /etc/sudoers.d/dot-brew-install > /dev/null
+    sudo chmod 440 /etc/sudoers.d/dot-brew-install
+  fi
+  echo "Done. Other users can run: brew install <name> (only allowlisted names). Allowlist is read-only; update via dot shared."
+  exit 0
+fi
+
+# --- dot pull: force pull (discard local changes, match remote) ---
 if [ "$1" = "--pull" ] || [ "$1" = "pull" ]; then
   echo "› Force pull (discard local changes)..."
   branch=$(git -C "$DOTFILES" branch --show-current)

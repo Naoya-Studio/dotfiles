@@ -1,0 +1,8 @@
+# Packages other users on this Mac are allowed to install with `brew install`.
+# One entry per line: "brew <name>" or "cask <name>". Lines starting with # are ignored.
+# After editing, run: dot shared. The deployed copy is read-only (chmod 444) so only you can change it.
+#
+# Examples:
+# brew node
+# brew python@3.12
+# cask google-chrome
