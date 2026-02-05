@@ -29,6 +29,8 @@ if [ "$1" = "--update" ] || [ "$1" = "update" ]; then
   else
     echo "› Nothing to commit."
   fi
+  echo "› Pulling remote changes..."
+  git -C "$DOTFILES" pull --rebase
   echo "› Pushing..."
   git -C "$DOTFILES" push
   exit 0
