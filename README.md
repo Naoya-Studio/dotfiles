@@ -15,7 +15,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/ma
 <details>
 <summary><strong>Other</strong></summary>
 
-Same URL; pass `--` then one or more modes: `--core`, `--homebrew`, `--alfred`, `--git`, `--macos`, `--tmux`, `--github`, `--ghostty`. (The leading `--` is required so the mode reaches the script when using `bash -c "..."`.) Multiple run in order: homebrew → git → github → ...
+Same URL. **Single**: `... --homebrew`. **Multiple**: `... --homebrew --github`. Modes: `core`, `homebrew`, `alfred`, `git`, `macos`, `tmux`, `github`, `ghostty` (with or without `--`). Run order: homebrew → git → github → ...
 
 | Option            | Command          | What it does                                                                                                          |
 | ----------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -28,7 +28,7 @@ Same URL; pass `--` then one or more modes: `--core`, `--homebrew`, `--alfred`, 
 | **GitHub CLI**    | `... --github`   | Install gh if needed, run `gh auth login`.                                                                            |
 | **Ghostty**       | `... --ghostty`  | `brew install --cask ghostty`. Config in app or `~/.config/ghostty/config`.                                           |
 
-Examples: `... -- --homebrew` (Homebrew only); `... -- --github --homebrew` (run both); `... -- --alfred --macos` (clone then alfred, then macos). Use the full curl URL in place of `...`.
+Examples: `... --homebrew` (Homebrew only); `... --homebrew --github` (both); `... --alfred --macos` (clone then alfred, then macos). Use the full curl URL in place of `...`.
 
 </details>
 

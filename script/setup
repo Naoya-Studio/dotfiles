@@ -3,7 +3,7 @@
 # One entry point. Pass mode(s) with or without --. Multiple modes run in order: homebrew, git, github, ghostty, alfred, macos.
 #
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Naoya-Studio/dotfiles/main/script/setup)"
-#   bash -c "$(curl -fsSL .../script/setup)" -- --github --homebrew
+#   bash -c "$(curl -fsSL .../script/setup)" --homebrew --github   # $0 and $@ both used as modes
 #
 
 set -e
@@ -12,11 +12,22 @@ DOTFILES_REPO="https://github.com/Naoya-Studio/dotfiles.git"
 DOTFILES_DIR="$HOME/dotfiles"
 
 # Parse all args: strip leading -- so --github and github both work. Default to full if no args.
+# With "bash -c 'script' --homebrew --github", $0 is --homebrew and $@ is --github; include $0 so both run.
+m0="${0#--}"
+case "$m0" in
+  full|core|homebrew|alfred|git|macos|github|ghostty|tmux) ZERO_IS_MODE=1 ;;
+  *) ZERO_IS_MODE=0 ;;
+esac
+if [ $ZERO_IS_MODE -eq 1 ]; then
+  ALL_ARGS=("$0" "$@")
+else
+  ALL_ARGS=("$@")
+fi
 MODES=()
-if [ $# -eq 0 ]; then
+if [ ${#ALL_ARGS[@]} -eq 0 ]; then
   MODES=(full)
 else
-  for a in "$@"; do
+  for a in "${ALL_ARGS[@]}"; do
     m="${a#--}"
     case "$m" in
       full|core|homebrew|alfred|git|macos|github|ghostty|tmux) MODES+=("$m") ;;
