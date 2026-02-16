@@ -53,6 +53,7 @@ brew "wimlib"
 brew "wxwidgets"
 brew "xcbeautify"
 brew "xcode-build-server"
+brew "xcodegen"
 brew "attheodo/formulae/wifimon"
 brew "kavehtehrani/tap/cloudflare-speed-cli"
 brew "teamookla/speedtest/speedtest"
@@ -85,6 +86,7 @@ cask "flutter"
 cask "font-hack-nerd-font"
 cask "font-jetbrains-mono-nerd-font"
 cask "ghostty"
+cask "google-chrome"
 cask "rvarunrathod/tap/hifidelity"
 cask "ilok-license-manager"
 cask "iterm2"
@@ -118,6 +120,7 @@ cask "waves-central"
 cask "wezterm"
 cask "zen"
 cask "zoom"
+mas "Adobe Lightroom", id: 1451544217
 mas "Amphetamine", id: 937984704
 mas "Apple Configurator", id: 1037126344
 mas "Bee DICOM Viewer", id: 1590273176
