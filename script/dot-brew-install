@@ -69,7 +69,7 @@ for pkg in "${pkgs[@]}"; do
   if [ "$force_cask" = true ]; then
     in_formulae=false
   fi
-  if [ "$subcmd" = "uninstall" ]; then
+  if [ "$subcmd" = "uninstall" ] || [ "$subcmd" = "upgrade" ]; then
     # Uninstall: allow if on allowlist, or if installed in shared prefix (brew list / list --cask)
     if [ "$in_casks" = true ] || [ "$in_formulae" = true ]; then
       :
