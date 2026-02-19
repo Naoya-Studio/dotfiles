@@ -4,7 +4,7 @@
 
 set -e
 ALLOWED_URL_FILE="/usr/local/etc/dot-brew-allowed-url"
-SHARED_PREFIX="/opt/homebrew-shared"
+SHARED_PREFIX="/opt/homebrew"
 SHARED_BREW="$SHARED_PREFIX/bin/brew.real"
 
 # Allowlist from GitHub URL only (no local file)

@@ -38,9 +38,10 @@ if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
   echo "› Setting up shared Homebrew..."
   bash "$DOTFILES/script/setup-shared-homebrew.sh"
   echo "› Allowing group write so other users can brew install..."
-  sudo chgrp -R staff /opt/homebrew-shared
-  sudo chmod -R g+w /opt/homebrew-shared
-  sudo chmod -R g+s /opt/homebrew-shared
+  echo "› Allowing group write so other users can brew install..."
+  sudo chgrp -R staff /opt/homebrew
+  sudo chmod -R g+w /opt/homebrew
+  sudo chmod -R g+s /opt/homebrew
   echo "› Installing allowlist URL (brew-allowed / brew install fetch from GitHub)..."
   sudo mkdir -p /usr/local/etc
   sudo rm -f /usr/local/etc/dot-brew-allowed
@@ -69,12 +70,12 @@ echo "Allowed (brew install for other users):"
 echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
 END
   chmod 755 /usr/local/bin/brew-allowed'
-  # Wrap /opt/homebrew-shared/bin/brew so "brew allowed" and allowlisted "brew install" work (PATH has this dir)
-  SHARED_PREFIX="/opt/homebrew-shared"
+  # Wrap /opt/homebrew/bin/brew so "brew allowed" and allowlisted "brew install" work (PATH has this dir)
+  SHARED_PREFIX="/opt/homebrew"
   if [ ! -x "$SHARED_PREFIX/bin/brew.real" ]; then
     sudo mv "$SHARED_PREFIX/bin/brew" "$SHARED_PREFIX/bin/brew.real"
   fi
-  sudo sh -c 'cat > /opt/homebrew-shared/bin/brew << "BREWWRAP"
+  sudo sh -c 'cat > /opt/homebrew/bin/brew << "BREWWRAP"
 #!/bin/sh
 umask 002
 case "$1" in
@@ -88,12 +89,12 @@ case "$1" in
     echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
     ;;
   install|uninstall|upgrade) exec sudo /usr/local/bin/dot-brew-install "$@" ;;
-  *) exec /opt/homebrew-shared/bin/brew.real "$@" ;;
+  *) exec /opt/homebrew/bin/brew.real "$@" ;;
 esac
 BREWWRAP
-chmod 755 /opt/homebrew-shared/bin/brew'
-  echo "› Adding /opt/homebrew-shared/bin to PATH for all users..."
-  echo '/opt/homebrew-shared/bin' | sudo tee /etc/paths.d/dot-brew-shared > /dev/null
+chmod 755 /opt/homebrew/bin/brew'
+  echo "› Adding /opt/homebrew/bin to PATH for all users..."
+  echo '/opt/homebrew/bin' | sudo tee /etc/paths.d/dot-brew-shared > /dev/null
   if [ ! -f /etc/sudoers.d/dot-brew-install ]; then
     echo "› Allowing passwordless dot-brew-install for allowlisted installs..."
     echo 'ALL ALL=(ALL) NOPASSWD: /usr/local/bin/dot-brew-install *' | sudo tee /etc/sudoers.d/dot-brew-install > /dev/null
@@ -101,10 +102,10 @@ chmod 755 /opt/homebrew-shared/bin/brew'
   fi
   echo "› Allowing passwordless Cask install/uninstall to /Applications (copy, chown, rm for non-admin users)..."
   {
-    echo 'ALL ALL=(ALL) NOPASSWD,SETENV: /bin/cp -pR /opt/homebrew-shared/Caskroom/*/*/* /Applications/*'
+    echo 'ALL ALL=(ALL) NOPASSWD,SETENV: /bin/cp -pR /opt/homebrew/Caskroom/*/*/* /Applications/*'
     echo 'ALL ALL=(ALL) NOPASSWD,SETENV: /usr/sbin/chown -R * /Applications/*'
     echo 'ALL ALL=(ALL) NOPASSWD,SETENV: /bin/rm -R -f * /Applications/*'
-    echo 'ALL ALL=(ALL) NOPASSWD,SETENV: /usr/sbin/installer -pkg /opt/homebrew-shared/Caskroom/* -target /'
+    echo 'ALL ALL=(ALL) NOPASSWD,SETENV: /usr/sbin/installer -pkg /opt/homebrew/Caskroom/* -target /'
   } | sudo tee /etc/sudoers.d/dot-brew-cask-copy > /dev/null
   sudo chmod 440 /etc/sudoers.d/dot-brew-cask-copy
   echo "Done. Allowlist is fetched from GitHub when users run brew-allowed / brew install (no pull needed on other Macs)."
