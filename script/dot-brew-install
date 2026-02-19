@@ -50,10 +50,9 @@ install_extra=()
 uninstall_extra=()
 while [ $# -gt 0 ]; do
   case "$1" in
-    --cask) force_cask=true ;;
-    --force) [ "$subcmd" = "install" ] || [ "$subcmd" = "upgrade" ] && install_extra+=("$1") || uninstall_extra+=("$1") ;;
-    --zap)   [ "$subcmd" = "uninstall" ] && uninstall_extra+=("$1") ;;
-    *)       pkgs+=("$1") ;;
+    --cask) force_cask=true; [ "$subcmd" = "install" ] || [ "$subcmd" = "upgrade" ] && install_extra+=("$1") || uninstall_extra+=("$1") ;;
+    -*)     [ "$subcmd" = "install" ] || [ "$subcmd" = "upgrade" ] && install_extra+=("$1") || uninstall_extra+=("$1") ;;
+    *)      pkgs+=("$1") ;;
   esac
   shift
 done
