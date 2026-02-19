@@ -98,15 +98,20 @@ done
 # Homebrew must not run as root; run as the user who invoked sudo
 run_brew() {
   # For upgrade, we might need sudo rights if updating casks in /Applications
-  # HOMEBREW_NO_SANDBOX=1: Disable sandbox to prevent sandbox-exec errors in multi-user
-  # GIT_CONFIG...: Disable credential helper to prevent keychain prompts (locked keychain)
-  sudo -H -u "$RUN_USER" env HOMEBREW_PREFIX="$SHARED_PREFIX" HOMEBREW_REPOSITORY="$SHARED_PREFIX" \
-    HOMEBREW_NO_SANDBOX=1 \
-    GIT_TERMINAL_PROMPT=0 \
-    GIT_CONFIG_COUNT=1 \
-    GIT_CONFIG_KEY_0=credential.helper \
-    GIT_CONFIG_VALUE_0= \
-    "$SHARED_BREW" "$@"
+  # Use bash -c to strictly enforce environment variables for the new user context.
+  # HOMEBREW_NO_SANDBOX=1: Disable sandbox to prevent sandbox-exec errors (exit 126).
+  # GIT variables: Disable credential helper and prompts to prevent keychain locks.
+  sudo -H -u "$RUN_USER" /bin/bash -c "
+    export HOMEBREW_PREFIX='$SHARED_PREFIX'
+    export HOMEBREW_REPOSITORY='$SHARED_PREFIX'
+    export HOMEBREW_NO_SANDBOX=1
+    export GIT_TERMINAL_PROMPT=0
+    export GIT_ASKPASS=/usr/bin/false
+    export GIT_CONFIG_COUNT=1
+    export GIT_CONFIG_KEY_0=credential.helper
+    export GIT_CONFIG_VALUE_0=
+    exec '$SHARED_BREW' \"\$@\"
+  " -- "$@"
 }
 failed=0
 if [ "$subcmd" = "install" ]; then
