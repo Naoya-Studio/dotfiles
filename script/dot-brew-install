@@ -39,7 +39,7 @@ done <<< "$allowlist_content"
 subcmd="$1"
 shift || true
 RUN_USER="${SUDO_USER:-$USER}"
-if [ "$subcmd" != "install" ] && [ "$subcmd" != "uninstall" ]; then
+if [ "$subcmd" != "install" ] && [ "$subcmd" != "uninstall" ] && [ "$subcmd" != "upgrade" ]; then
   exec "$SHARED_BREW" "$subcmd" "$@"
 fi
 
@@ -51,7 +51,7 @@ uninstall_extra=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --cask) force_cask=true ;;
-    --force) [ "$subcmd" = "install" ] && install_extra+=("$1") || uninstall_extra+=("$1") ;;
+    --force) [ "$subcmd" = "install" ] || [ "$subcmd" = "upgrade" ] && install_extra+=("$1") || uninstall_extra+=("$1") ;;
     --zap)   [ "$subcmd" = "uninstall" ] && uninstall_extra+=("$1") ;;
     *)       pkgs+=("$1") ;;
   esac
@@ -98,12 +98,21 @@ done
 
 # Homebrew must not run as root; run as the user who invoked sudo
 run_brew() {
+  # For upgrade, we might need sudo rights if updating casks in /Applications
   sudo -u "$RUN_USER" env HOMEBREW_PREFIX="$SHARED_PREFIX" HOMEBREW_REPOSITORY="$SHARED_PREFIX" "$SHARED_BREW" "$@"
 }
 failed=0
 if [ "$subcmd" = "install" ]; then
   [ ${#formula_pkgs[@]} -gt 0 ] && run_brew install "${install_extra[@]}" "${formula_pkgs[@]}" || failed=1
   [ ${#cask_pkgs[@]} -gt 0 ] && run_brew install --cask "${install_extra[@]}" "${cask_pkgs[@]}" || failed=1
+elif [ "$subcmd" = "upgrade" ]; then
+  # Upgrade: if no packages specified, upgrade everything (brew upgrade).
+  if [ ${#formula_pkgs[@]} -eq 0 ] && [ ${#cask_pkgs[@]} -eq 0 ] && [ ${#pkgs[@]} -eq 0 ]; then
+     run_brew upgrade "${install_extra[@]}" || failed=1
+  else
+     [ ${#formula_pkgs[@]} -gt 0 ] && run_brew upgrade "${install_extra[@]}" "${formula_pkgs[@]}" || failed=1
+     [ ${#cask_pkgs[@]} -gt 0 ] && run_brew upgrade --cask "${install_extra[@]}" "${cask_pkgs[@]}" || failed=1
+  fi
 else
   [ ${#formula_pkgs[@]} -gt 0 ] && run_brew uninstall "${uninstall_extra[@]}" "${formula_pkgs[@]}" || failed=1
   [ ${#cask_pkgs[@]} -gt 0 ] && run_brew uninstall --cask "${uninstall_extra[@]}" "${cask_pkgs[@]}" || failed=1

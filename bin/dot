@@ -87,7 +87,7 @@ case "$1" in
     echo "Allowed (brew install for other users):"
     echo "$content" | grep -v "^#" | grep -v "^[[:space:]]*$" | sed "s/^/  /"
     ;;
-  install|uninstall) exec sudo /usr/local/bin/dot-brew-install "$@" ;;
+  install|uninstall|upgrade) exec sudo /usr/local/bin/dot-brew-install "$@" ;;
   *) exec /opt/homebrew-shared/bin/brew.real "$@" ;;
 esac
 BREWWRAP
