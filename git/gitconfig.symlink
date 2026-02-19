@@ -2,3 +2,5 @@
 [user]
 	name = Naoya Uchida
 	email = naoya.studio@gmail.com
+[safe]
+	directory = /opt/homebrew-shared
