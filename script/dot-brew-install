@@ -38,7 +38,7 @@ done <<< "$allowlist_content"
 
 subcmd="$1"
 shift || true
-RUN_USER="${SUDO_USER:-$USER}"
+RUN_USER=$(stat -f '%Su' "$SHARED_PREFIX" 2>/dev/null || echo "${SUDO_USER:-$USER}")
 if [ "$subcmd" != "install" ] && [ "$subcmd" != "uninstall" ] && [ "$subcmd" != "upgrade" ]; then
   exec "$SHARED_BREW" "$subcmd" "$@"
 fi
