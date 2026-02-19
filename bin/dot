@@ -50,8 +50,8 @@ if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
     echo "› Allowlist URL saved (brew-allowed / brew install will fetch from GitHub on this Mac and others)."
   fi
   echo "› Configuring git safe.directory for shared Homebrew (system-wide)..."
-  if ! git config --system --get-all safe.directory | grep -q "^/opt/homebrew-shared$"; then
-    sudo git config --system --add safe.directory /opt/homebrew-shared
+  if ! git config --system --get-all safe.directory | grep -q '^\*$'; then
+    sudo git config --system --add safe.directory '*'
   fi
   echo "› Installing dot-brew-install, dot-brew-fetch-allowed, brew wrapper, brew-allowed..."
   sudo cp "$DOTFILES/script/dot-brew-install" /usr/local/bin/dot-brew-install
