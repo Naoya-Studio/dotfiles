@@ -38,7 +38,7 @@ if [ "$1" = "--shared" ] || [ "$1" = "shared" ]; then
   echo "› Setting up shared Homebrew..."
   bash "$DOTFILES/script/setup-shared-homebrew.sh"
   echo "› Allowing group write so other users can brew install..."
-  echo "› Allowing group write so other users can brew install..."
+
   sudo chgrp -R staff /opt/homebrew
   sudo chmod -R g+w /opt/homebrew
   sudo chmod -R g+s /opt/homebrew
