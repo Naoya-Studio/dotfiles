@@ -118,7 +118,6 @@ cask "visual-studio-code"
 cask "vlc"
 cask "waves-central"
 cask "wezterm"
-cask "wireshark-chmodbpf"
 cask "zen"
 cask "zoom"
 mas "Amphetamine", id: 937984704
