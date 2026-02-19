@@ -118,6 +118,7 @@ cask "visual-studio-code"
 cask "vlc"
 cask "waves-central"
 cask "wezterm"
+cask "wireshark-chmodbpf"
 cask "zen"
 cask "zoom"
 mas "Adobe Lightroom", id: 1451544217
