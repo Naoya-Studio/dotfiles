@@ -107,10 +107,18 @@ run_brew() {
     export HOMEBREW_NO_SANDBOX=1
     export GIT_TERMINAL_PROMPT=0
     export GIT_ASKPASS=/usr/bin/false
-    export GIT_CONFIG_COUNT=1
-    export GIT_CONFIG_KEY_0=credential.helper
     export GIT_CONFIG_VALUE_0=
     echo \"DEBUG: HOME=\$HOME USER=\$USER HOMEBREW_NO_SANDBOX=\$HOMEBREW_NO_SANDBOX\" >&2
+    
+    # Create a temporary keychain to prevent 'security' prompts for the locked login keychain.
+    KEYCHAIN_PATH=\"/tmp/dot-brew-\$USER.keychain-db\"
+    if [ -f \"\$KEYCHAIN_PATH\" ]; then rm -f \"\$KEYCHAIN_PATH\"; fi
+    security create-keychain -p \"\" \"\$KEYCHAIN_PATH\"
+    security list-keychains -s \"\$KEYCHAIN_PATH\"
+    
+    # Debug: Check brew config to see if sandbox is disabled
+    '$SHARED_BREW' config | grep 'Sandbox' >&2
+
     exec '$SHARED_BREW' \"\$@\"
   " -- "$@"
 }
