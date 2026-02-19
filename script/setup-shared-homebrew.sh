@@ -16,6 +16,7 @@ if [ ! -d "$SHARED_PREFIX" ]; then
   sudo mkdir -p "$SHARED_PREFIX"
   sudo chmod 755 "$SHARED_PREFIX"
   sudo chown "$RUN_USER:staff" "$SHARED_PREFIX"
+  sudo chmod g+s "$SHARED_PREFIX"
 fi
 
 if [ ! -x "$SHARED_PREFIX/bin/brew" ]; then
