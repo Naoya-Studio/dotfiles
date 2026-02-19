@@ -99,9 +99,10 @@ done
 run_brew() {
   # For upgrade, we might need sudo rights if updating casks in /Applications
   # Use bash -c to strictly enforce environment variables for the new user context.
-  # HOMEBREW_NO_SANDBOX=1: Disable sandbox to prevent sandbox-exec errors (exit 126).
-  # GIT variables: Disable credential helper and prompts to prevent keychain locks.
+  # Unset SUDO_* variables so Homebrew thinks it's a normal user setup, not a sudo session.
+  # This prevents Homebrew from trying to manage privileges or enforce sandbox restrictively.
   sudo -H -u "$RUN_USER" /bin/bash -c "
+    unset SUDO_USER SUDO_UID SUDO_GID
     export HOMEBREW_PREFIX='$SHARED_PREFIX'
     export HOMEBREW_REPOSITORY='$SHARED_PREFIX'
     export HOMEBREW_NO_SANDBOX=1
