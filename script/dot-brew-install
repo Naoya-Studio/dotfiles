@@ -98,7 +98,7 @@ done
 # Homebrew must not run as root; run as the user who invoked sudo
 run_brew() {
   # For upgrade, we might need sudo rights if updating casks in /Applications
-  sudo -u "$RUN_USER" env HOMEBREW_PREFIX="$SHARED_PREFIX" HOMEBREW_REPOSITORY="$SHARED_PREFIX" "$SHARED_BREW" "$@"
+  sudo -H -u "$RUN_USER" env HOMEBREW_PREFIX="$SHARED_PREFIX" HOMEBREW_REPOSITORY="$SHARED_PREFIX" "$SHARED_BREW" "$@"
 }
 failed=0
 if [ "$subcmd" = "install" ]; then
