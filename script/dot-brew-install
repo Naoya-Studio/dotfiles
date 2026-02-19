@@ -110,6 +110,7 @@ run_brew() {
     export GIT_CONFIG_COUNT=1
     export GIT_CONFIG_KEY_0=credential.helper
     export GIT_CONFIG_VALUE_0=
+    echo \"DEBUG: HOME=\$HOME USER=\$USER HOMEBREW_NO_SANDBOX=\$HOMEBREW_NO_SANDBOX\" >&2
     exec '$SHARED_BREW' \"\$@\"
   " -- "$@"
 }
