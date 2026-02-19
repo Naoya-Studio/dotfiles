@@ -9,3 +9,4 @@
 cask google-chrome
 cask google-chrome@canary
 cask android-studio
+cask nordvpn
