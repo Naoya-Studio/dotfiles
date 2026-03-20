@@ -6,3 +6,6 @@ theme = iTerm2 Dark Background
 font-family = "SF Mono Terminal"
 font-family = "Osaka"
 font-feature = -dlig
+font-feature = -calt
+
+macos-titlebar-style = tabs

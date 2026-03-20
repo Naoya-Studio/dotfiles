@@ -6,6 +6,7 @@ brew "mas"
 brew "pam-reattach"
 brew "starship"
 brew "tmux"
+brew "zsh-completions"
 
 # essentials (apps)
 cask "alfred"

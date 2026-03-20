@@ -8,3 +8,7 @@ eval "$(starship init zsh)"
 if command -v pyenv &>/dev/null; then
   eval "$(pyenv init --path)"
 fi
+
+# Completion settings
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
