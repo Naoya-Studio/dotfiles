@@ -2,5 +2,13 @@
 [user]
 	name = Naoya Uchida
 	email = naoya.studio@gmail.com
+[core]
+	excludesfile = ~/.gitignore
+[init]
+	defaultBranch = main
+[fetch]
+	prune = true
 [safe]
 	directory = /opt/homebrew-shared
+[include]
+	path = ~/.gitconfig.local

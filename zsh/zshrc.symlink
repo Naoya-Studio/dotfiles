@@ -1,4 +1,14 @@
-eval "$(~/.local/bin/agent shell-integration zsh)"
+# Skip heavy init when Cursor/VSCode resolves shell environment
+if [[ "$VSCODE_RESOLVING_ENVIRONMENT" == "1" ]]; then
+  return
+fi
+
+# Cursor agent shell integration (disabled)
+# NOTE: Disabled to prevent interactive "Press Enter to fix" prompts on command failure.
+# Re-enable manually if needed:
+# if [[ "$ENABLE_AGENT_SHELL_INTEGRATION" == "1" ]] && [ -x ~/.local/bin/agent ]; then
+#   eval "$(~/.local/bin/agent shell-integration zsh)"
+# fi
 # Shortcut to this dotfiles path is $DOTFILES
 export DOTFILES=$HOME/dotfiles
 
