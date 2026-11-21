@@ -12,7 +12,7 @@ fi
 mkdir -p "$HOME/Library/LaunchAgents"
 
 # Ensure `brew autoupdate` command exists (provided by the tap)
-brew tap homebrew/autoupdate >/dev/null 2>&1 || true
+brew tap domt4/autoupdate https://github.com/DomT4/homebrew-autoupdate.git >/dev/null 2>&1 || true
 
 if brew autoupdate status 2>/dev/null | grep -q "running"; then
   exit 0

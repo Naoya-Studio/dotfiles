@@ -4,6 +4,7 @@
 #   dot              — update everything (pull, brew, install)
 #   dot --update     — sync current state to GitHub (Brewfile + all changes, commit & push)
 #   dot pull         — force pull (discard local changes, match remote)
+#   dot edit         — open dotfiles in editor ($VISUAL / $EDITOR / vim)
 #   dot shared       — allow other users to brew install allowlisted packages (needs sudo)
 
 set -e
@@ -124,10 +125,15 @@ if [ "$1" = "--pull" ] || [ "$1" = "pull" ]; then
   exit 0
 fi
 
+# --- dot edit: open dotfiles in editor ---
+if [ "$1" = "--edit" ] || [ "$1" = "edit" ]; then
+  exec ${VISUAL:-${EDITOR:-vim}} "$DOTFILES"
+fi
+
 # --- dot --update: sync to GitHub (Brewfile + all changes, commit & push) ---
 if [ "$1" = "--update" ] || [ "$1" = "update" ]; then
   echo "› Updating Brewfile..."
-  brew bundle dump -f --file="$DOTFILES/Brewfile"
+  brew bundle dump -f --no-describe --file="$DOTFILES/Brewfile"
   echo "› Staging all changes..."
   git -C "$DOTFILES" add -A
   if ! git -C "$DOTFILES" diff --staged --quiet 2>/dev/null; then
@@ -146,7 +152,7 @@ fi
 # Unknown subcommand: don't run full dot, error instead
 if [ -n "$1" ]; then
   echo "Unknown command: $1" >&2
-  echo "Usage: dot [update|pull|shared]" >&2
+  echo "Usage: dot [update|pull|edit|shared]" >&2
   echo "  dot shared add/remove/list — allowlist for other users" >&2
   exit 1
 fi

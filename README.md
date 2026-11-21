@@ -100,7 +100,7 @@ dot --edit
 
 ```
 dotfiles/
-├── bin/dot              # dot, dot update, dot pull, dot shared
+├── bin/dot              # dot, dot update, dot pull, dot edit, dot shared
 ├── script/
 │   ├── setup            # One-liner entry (full / core)
 │   ├── install-homebrew-only
@@ -110,12 +110,12 @@ dotfiles/
 │   ├── dot-brew-install # Allowlist check + install to /opt/homebrew-shared
 │   └── setup-shared-homebrew.sh  # One-time: create shared Homebrew prefix
 ├── homebrew/            # Homebrew install, autoupdate, allowed.txt (allowlist for dot shared)
-├── macos/               # set-defaults (Touch ID, Finder, etc.)
+├── macos/               # set-defaults, set-dock, set-sudo-local-tmux, sudo-recovery.md
 ├── alfred/              # Alfred prefs + install
-├── git/, github/        # Git & gh config
-├── ghostty/, tmux/, zsh/
+├── git/, github/        # Git (gitconfig, global gitignore) & gh config
+├── ghostty/, starship/, tmux/, zsh/
 ├── system/              # PATH, env
-└── Brewfile
+└── Brewfile, Brewfile.core
 ```
 
 ### Run installers individually
@@ -127,6 +127,7 @@ dotfiles/
 ./git/install.sh        # Git user (name/email); --force to reconfigure
 ./github/install.sh     # gh auth
 ./ghostty/install.sh    # Ghostty config
+./starship/install.sh   # Starship config
 ```
 
 ### How dotfiles are loaded

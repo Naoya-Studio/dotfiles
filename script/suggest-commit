@@ -21,10 +21,10 @@ echo ""
 # Brewfile: Added / Removed (max 15 each for readable history)
 LIST_LIMIT=15
 if echo "$files" | grep -q '^Brewfile$'; then
-  ADDED=$(git diff --cached Brewfile 2>/dev/null | grep '^+' | grep -v '^+++' | sed 's/^+//' | head -n "$LIST_LIMIT")
-  REMOVED=$(git diff --cached Brewfile 2>/dev/null | grep '^-' | grep -v '^---' | sed 's/^-//' | head -n "$LIST_LIMIT")
-  ADDED_COUNT=$(git diff --cached Brewfile 2>/dev/null | grep '^+' | grep -v '^+++' | wc -l | tr -d ' ')
-  REMOVED_COUNT=$(git diff --cached Brewfile 2>/dev/null | grep '^-' | grep -v '^---' | wc -l | tr -d ' ')
+  ADDED=$(git diff --cached Brewfile 2>/dev/null | grep '^+' | grep -v '^+++' | sed 's/^+//' | grep -v '^#' | grep -v '^[[:space:]]*$' | head -n "$LIST_LIMIT")
+  REMOVED=$(git diff --cached Brewfile 2>/dev/null | grep '^-' | grep -v '^---' | sed 's/^-//' | grep -v '^#' | grep -v '^[[:space:]]*$' | head -n "$LIST_LIMIT")
+  ADDED_COUNT=$(git diff --cached Brewfile 2>/dev/null | grep '^+' | grep -v '^+++' | sed 's/^+//' | grep -v '^#' | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
+  REMOVED_COUNT=$(git diff --cached Brewfile 2>/dev/null | grep '^-' | grep -v '^---' | sed 's/^-//' | grep -v '^#' | grep -v '^[[:space:]]*$' | wc -l | tr -d ' ')
 
   if [ -n "$ADDED" ]; then
     echo "Added:"

@@ -4,3 +4,7 @@ Brewfile.lock.json
 
 .gemini/
 gha-creds-*.json
+
+# Alfred: keep MAIN_HASH (used by alfred/install.sh), ignore other Mac-specific hashes
+alfred/Alfred.alfredpreferences/preferences/local/*
+!alfred/Alfred.alfredpreferences/preferences/local/d05fb046086fa0f7268efc635c45555a69327ea0/
